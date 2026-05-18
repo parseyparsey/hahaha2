@@ -13,18 +13,16 @@ void main()
     gl_FragDepth = 0.5;//lightDistance;
 }*/
 
-/*// pshadow_depth.fs
 #version 460 core
 in vec3 FragPosOut;
 uniform vec3 lightPos;
 uniform float far_plane;
 
-void main()
-{
+void main(){
     float lightDistance = length(FragPosOut - lightPos);
     gl_FragDepth = lightDistance / far_plane;
-}*/
-
+}
+/*
 #version 460 core
 in vec3 FragPos;
 uniform vec3 lightPos;
@@ -33,4 +31,4 @@ uniform float far_plane;
 void main(){
     float lightDistance = length(FragPos - lightPos);
     gl_FragDepth = lightDistance / far_plane;
-}
+}*/

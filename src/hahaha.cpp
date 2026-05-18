@@ -335,7 +335,7 @@ Shader skyboxshader("shaders/skybox.vs", "shaders/skybox.fs");
 Shader envmapping("shaders/envmapping.vs", "shaders/envmapping.fs");
 Shader depthshader("shaders/depth_shader.vs", "shaders/depth_shader.fs");
 Shader depthquad("shaders/depth_quad.vs", "shaders/depth_quad.fs");
-Shader pshadow_depth("shaders/pshadow_depth.vs", "shaders/pshadow_depth.fs");//, "shaders/pshadow_depth.gs");
+Shader pshadow_depth("shaders/pshadow_depth.vs", "shaders/pshadow_depth.fs", "shaders/pshadow_depth.gs");
 
 
 //----------------------------------------------//
@@ -724,9 +724,9 @@ int main() {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO_pshadow);
-	//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-	    GL_TEXTURE_CUBE_MAP_POSITIVE_X, depthCubemap, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+	    //GL_TEXTURE_CUBE_MAP_POSITIVE_X, depthCubemap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -948,8 +948,7 @@ int main() {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		pshadow_depth.use();
 
-
-		/*for(int i = 0; i < 6; ++i)
+		for(int i = 0; i < 6; ++i)
 		{
 			pshadow_depth.setMat4("shadowMatrices[" + std::to_string(i) + "]", pshadowTransforms[i]);
 		}
@@ -960,17 +959,17 @@ int main() {
 		glEnable(GL_DEPTH_TEST);
 		//glDepthFunc(GL_LEQUAL);
 		if(debugPshadow)
-			std::cout << "viewport: " << PSHADOW_WIDTH << "x" << PSHADOW_HEIGHT << std::endl;
+			/*std::cout << "viewport: " << PSHADOW_WIDTH << "x" << PSHADOW_HEIGHT << std::endl;
 			GLint vp[4];
 			glGetIntegerv(GL_VIEWPORT, vp);
 			std::cout << "actual viewport: " << vp[0] << " " << vp[1] << " " << vp[2] << " " << vp[3] << std::endl;
 			GLint drawFBO;
 			glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFBO);
-			std::cout << "bound FBO: " << drawFBO << " expected: " << FBO_pshadow << std::endl;
+			std::cout << "bound FBO: " << drawFBO << " expected: " << FBO_pshadow << std::endl;*/
 			rendershadow(pshadow_depth);
 		//glDepthFunc(GL_LESS);
 
-		float pixel = 0.0f;
+		/*float pixel = 0.0f;
 		glReadPixels(512, 512, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pixel);
 		std::cout << "depth pixel: " << pixel << std::endl;
 
@@ -978,6 +977,7 @@ int main() {
 		glGetProgramiv(pshadow_depth.ID, GL_ATTACHED_SHADERS, &numShaders);
 		std::cout << "attached shaders: " << numShaders << std::endl;*/
 
+		/*
 		//test==============
 		pshadow_depth.setFloat("far_plane", far_plane);
 		pshadow_depth.setVec3("lightPos", plightPos[0]);
@@ -997,7 +997,7 @@ int main() {
 		        faces[face], depthCubemap, 0);
 		    glClear(GL_DEPTH_BUFFER_BIT);
 		    pshadow_depth.setMat4("lightSpaceMatrix", pshadowTransforms[face]);
-		    std::cout << "lightSpaceMatrix[0][0]: " << pshadowTransforms[face][0][0] << std::endl;
+		    //std::cout << "lightSpaceMatrix[0][0]: " << pshadowTransforms[face][0][0] << std::endl;
 		    if(debugPshadow)
 		    	rendershadow(pshadow_depth);
 		}
@@ -1007,15 +1007,17 @@ int main() {
 		    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, faces[face], depthCubemap, 0);
 		    float pixel = 1.0f;
 		    glReadPixels(512, 512, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pixel);
-		    std::cout << "face " << face << " depth: " << pixel << std::endl;
+		    //std::cout << "face " << face << " depth: " << pixel << std::endl;
 		}
+		//================================
+		*/
 
-		glm::mat4 m = pshadowTransforms[0];
+		/*glm::mat4 m = pshadowTransforms[0];
 		printf("face0 matrix:\n");
 		printf("%.3f %.3f %.3f %.3f\n", m[0][0], m[1][0], m[2][0], m[3][0]);
 		printf("%.3f %.3f %.3f %.3f\n", m[0][1], m[1][1], m[2][1], m[3][1]);
 		printf("%.3f %.3f %.3f %.3f\n", m[0][2], m[1][2], m[2][2], m[3][2]);
-		printf("%.3f %.3f %.3f %.3f\n", m[0][3], m[1][3], m[2][3], m[3][3]);
+		printf("%.3f %.3f %.3f %.3f\n", m[0][3], m[1][3], m[2][3], m[3][3]);*/
 		//==================
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

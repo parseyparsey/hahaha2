@@ -1,14 +1,13 @@
-/*#version 460 core
+#version 460 core
 layout (location = 0) in vec3 aPos;
-
 uniform mat4 model;
-
-out vec3 test00; // test
+uniform mat4 shadowMatrices[6];
+out vec3 FragPos;
 
 void main(){
-    test00 =  vec3(model * vec4(aPos, 1.0)); // test
-    gl_Position = model * vec4(aPos, 1.0);
-}*/
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    gl_Position = shadowMatrices[0] * vec4(FragPos, 1.0);
+}
 
 /*// pshadow_depth.vs
 #version 460 core
@@ -22,6 +21,7 @@ void main(){
     gl_Position = shadowMatrices[0] * vec4(FragPos, 1.0); // valid clip space
 }*/
 
+/*
 #version 460 core
 layout (location = 0) in vec3 aPos;
 uniform mat4 model;
@@ -31,4 +31,4 @@ out vec3 FragPos;
 void main(){
     FragPos = vec3(model * vec4(aPos, 1.0));
     gl_Position = lightSpaceMatrix * vec4(FragPos, 1.0);
-}
+}*/
