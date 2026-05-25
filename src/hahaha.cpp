@@ -12,7 +12,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <audiosystem.h>
-#include <unistd.h>
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>
+#endif
 #include <texture.h>
 #include <shader.h>
 #include <plane.h>
@@ -260,10 +264,10 @@ glm::vec3 extractPosition(const glm::mat4& modelMatrix) {
 bool init0(){
 	cout << "!!!Hello World!!!" << endl;
 
-	char cwd[1024];
+	/*char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != nullptr) {
 		std::cout << "Current working directory: " << cwd << std::endl;
-	}
+	}*/
 
 	//--------------------------------------------------//
 	//            SETTING UP GLFW & GLAD                //
@@ -399,6 +403,8 @@ int main() {
 
 	double fpslastTime = glfwGetTime();
 	int nbFrames = 0;
+
+	std::cout << "Aloooha!\n";
 
 	//----------------------------------------------//
 	//            SETTING UP IMGUI                  //
