@@ -867,7 +867,7 @@ int main() {
 	audio.playSound("aud01", 1.0f);
 	audio.playSound("aud02", 1.0f);
 
-	std::cout << "plight_num = " << plight_num << "\n";
+	//std::cout << "plight_num = " << plight_num << "\n";
 
     //------------------------------//
     //         RENDER LOOP          //
