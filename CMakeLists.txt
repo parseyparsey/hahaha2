@@ -54,3 +54,7 @@ add_custom_command(TARGET hahaha2 POST_BUILD
 if(UNIX)
     target_link_libraries(hahaha2 PRIVATE dl m pthread)
 endif()
+
+if(UNIX)
+    target_link_libraries(hahaha2 PRIVATE dl m pthread X11)
+endif()
