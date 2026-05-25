@@ -42,6 +42,8 @@ glm::vec3 plightPos[] = {
 constexpr size_t plight_num = sizeof(plightPos) / sizeof(plightPos[0]);
 
 GLFWwindow* window;
+GLFWmonitor *monitor;
+const GLFWvidmode *monitor_mode;
 AudioSystem audio;
 unsigned int VAO, VAO1, VAO2, VAO3, VAO4, VAO5;
 unsigned int VBO, VBO1, VBO2, VBO3, VBO4, VBO5;
@@ -71,6 +73,7 @@ bool toggleFlash = false;
 bool toggleMenu = false;
 int flashlight_state = 0;
 bool debugPshadow = true;
+bool fullscreen = false;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -97,6 +100,14 @@ void calcCamVelocity(){
 		camVelocity = (camPos - camPrevPos) / deltatime;
 
 	camPrevPos = camPos;
+}
+
+void toggleFullscreen(GLFWwindow* window) {
+	if (fullscreen) {
+		glfwSetWindowMonitor(window, monitor, 0, 0, monitor_mode->width, monitor_mode->height, monitor_mode->refreshRate);
+	} else {
+		glfwSetWindowMonitor(window, nullptr, 100, 100, 800, 600, 0);
+	}
 }
 
 void processinput(GLFWwindow* window) {
@@ -173,6 +184,19 @@ void processinput(GLFWwindow* window) {
 		isF6pressed = true;
 	} else if (F6STATE == GLFW_RELEASE) {
 		isF6pressed = false;
+	}
+
+	static bool isF7pressed = false;
+	int F7STATE = glfwGetKey(window, GLFW_KEY_F7);
+	if (F7STATE == GLFW_PRESS && !isF7pressed) {
+		if (!fullscreen)
+			fullscreen = true;
+		else
+			fullscreen = false;
+		toggleFullscreen(window);
+		isF7pressed = true;
+	} else if (F7STATE == GLFW_RELEASE) {
+		isF7pressed = false;
 	}
 
     float camSpeed = 5.0f * deltatime;
@@ -292,6 +316,8 @@ bool init0(){
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	//glfwWindowHint(GLFW_SAMPLES, 4);
 
+	monitor = glfwGetPrimaryMonitor();
+	monitor_mode = glfwGetVideoMode(monitor);
 
 	window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
 	if (window == NULL){
