@@ -263,6 +263,7 @@ glm::vec3 extractPosition(const glm::mat4& modelMatrix) {
 
 bool init0(){
 	cout << "!!!Hello World!!!" << endl;
+	std::cout << "Aloooha! whattup, dawg?\n";
 
 	/*char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != nullptr) {
@@ -404,7 +405,6 @@ int main() {
 	double fpslastTime = glfwGetTime();
 	int nbFrames = 0;
 
-	std::cout << "Aloooha! whattup\n";
 
 	//----------------------------------------------//
 	//            SETTING UP IMGUI                  //
