@@ -13,7 +13,7 @@
 #include <GLFW/glfw3.h>
 #include <audiosystem.h>
 #ifdef _WIN32
-    #include <windows.h>
+    #include <direct.h>
 #else
     #include <unistd.h>
 #endif
@@ -277,10 +277,10 @@ bool init0(){
 	cout << "!!!Hello World!!!" << endl;
 	std::cout << "Aloooha! whattup, dawg?\n";
 
-	/*char cwd[1024];
+	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != nullptr) {
 		std::cout << "Current working directory: " << cwd << std::endl;
-	}*/
+	}
 
 	//--------------------------------------------------//
 	//            SETTING UP GLFW & GLAD                //
