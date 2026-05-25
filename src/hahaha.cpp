@@ -404,7 +404,7 @@ int main() {
 	double fpslastTime = glfwGetTime();
 	int nbFrames = 0;
 
-	std::cout << "Aloooha!\n";
+	std::cout << "Aloooha! whattup\n";
 
 	//----------------------------------------------//
 	//            SETTING UP IMGUI                  //
