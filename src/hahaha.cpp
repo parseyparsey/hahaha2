@@ -163,6 +163,18 @@ void processinput(GLFWwindow* window) {
         isF5pressed = false;
     }
 
+	static bool isF6pressed = false;
+	int F6STATE = glfwGetKey(window, GLFW_KEY_F6);
+	if (F6STATE == GLFW_PRESS && !isF6pressed) {
+		if (!debugPshadow)
+			debugPshadow = true;
+		else
+			debugPshadow = false;
+		isF6pressed = true;
+	} else if (F6STATE == GLFW_RELEASE) {
+		isF6pressed = false;
+	}
+
     float camSpeed = 5.0f * deltatime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camPos += camSpeed * camFront;
