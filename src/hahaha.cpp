@@ -299,7 +299,7 @@ glm::vec3 extractPosition(const glm::mat4& modelMatrix) {
 
 bool init0(){
 	cout << "!!!Hello World!!!" << endl;
-	std::cout << "Aloooha! whattup, dawg?\n";
+	std::cout << "Aloooha! whattup, gng?\n";
 
 	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != nullptr) {
