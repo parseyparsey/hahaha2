@@ -30,6 +30,9 @@
 #include <imgui_impl_opengl3.h>
 using namespace std;
 
+#define SET_SHADOW_RES 0
+#define SET_PSHADOW_RES 1
+
 glm::vec3 plightPos[] = {
     glm::vec3(0.0f, 0.0f, -3.0f),
     glm::vec3(5.0f, 5.0f, -5.0f),
@@ -50,8 +53,11 @@ unsigned int VBO, VBO1, VBO2, VBO3, VBO4, VBO5;
 unsigned int FBO, RBO, colorbuffer;
 unsigned int FBO_MSAA, colorbuffer_MSAA, RBO_MSAA;
 unsigned int FBO_depth, FBO_pshadow;
+unsigned int depthMap;
 unsigned int depthCubemap;
 unsigned int UBO;
+int SHADOW_HEIGHT ,SHADOW_WIDTH;
+int PSHADOW_HEIGHT, PSHADOW_WIDTH;
 
 glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -422,9 +428,13 @@ bool isSkyboxOn = true, isWireframeOn = false, isBlinn = true, isMuted = true, i
 float f = 0.694f, vol = 1.0f;
 static int theme_current = 2;
 static int filter_current = 0;
+static int shadow_current = 1;
+static int pshadow_current = 0;
 static int msaa_list = 2;
 static int msaa_current = 4;
 const char* themes[] = { "Classic", "Dark", "Light" };
+const char *shadow_res[] = {"1028", "2048", "4096"};
+const char *pshadow_res[] = {"1028", "2048", "4096"};
 const char* filters[] = { "Default", "Grayscale", "Negative",
 	"Kernel", "Blur", "Edge", "Blurred Grayscale", "Half-Color" };
 const char* msaa[] = { "Disabled", "x2", "x4", "x8", "x16" };
@@ -437,6 +447,7 @@ Texture blacktxt("textures/Solid_black.png", false, false);
 //================================================
 
 void rendershadow(Shader &shader);
+void shadowResolution(int type, int res);
 
 int main() {
 
@@ -730,9 +741,8 @@ int main() {
 
 	glGenFramebuffers(1, &FBO_depth);
 
-	const int SHADOW_HEIGHT = 2048, SHADOW_WIDTH = 2048;
+	SHADOW_HEIGHT = 2048, SHADOW_WIDTH = 2048;
 
-	unsigned int depthMap;
 	glGenTextures(1, &depthMap);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
@@ -754,7 +764,7 @@ int main() {
 	//             FRAMEBUFFER (POINT SHADOWS)            //
 	//----------------------------------------------------//
 
-	const int PSHADOW_HEIGHT = 1024, PSHADOW_WIDTH = 1024;
+	PSHADOW_HEIGHT = 1024, PSHADOW_WIDTH = 1024;
 
 	glGenFramebuffers(1, &FBO_pshadow);
 	glGenTextures(1, &depthCubemap);
@@ -1432,6 +1442,40 @@ int main() {
 				case 3: msaa_current = 8; break; case 4: msaa_current = 16; break;
 				}
 			}
+			if (ImGui::Combo("Shadow Map", &shadow_current, shadow_res,
+							 IM_ARRAYSIZE(shadow_res))) {
+				switch (shadow_current) {
+				case 0:
+					shadow_current = 0;
+					shadowResolution(SET_SHADOW_RES, 1024);
+					break;
+				case 1:
+					shadow_current = 1;
+					shadowResolution(SET_SHADOW_RES, 2048);
+					break;
+				case 2:
+					shadow_current = 2;
+					shadowResolution(SET_SHADOW_RES, 4096);
+					break;
+				}
+			}
+			if (ImGui::Combo("PShadow Map", &pshadow_current, pshadow_res,
+							 IM_ARRAYSIZE(pshadow_res))) {
+				switch (pshadow_current) {
+				case 0:
+					pshadow_current = 0;
+					shadowResolution(SET_PSHADOW_RES, 1024);
+					break;
+				case 1:
+					pshadow_current = 1;
+					shadowResolution(SET_PSHADOW_RES, 2048);
+					break;
+				case 2:
+					pshadow_current = 2;
+					shadowResolution(SET_PSHADOW_RES, 4096);
+					break;
+				}
+			}
 			ImGui::SliderFloat("Opacity", &f, 0.0f, 1.0f);
 			ImGui::SliderFloat("Volume", &vol, 0.0f, 1.0f);
 			if (ImGui::Button("Hide"))
@@ -1568,5 +1612,22 @@ void rendershadow(Shader &shader){
 	glDrawArrays(GL_TRIANGLES, 0, 36);*/
 };
 
-
+void shadowResolution(int type, int res)
+{ 
+	if (type == SET_SHADOW_RES) {
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, res,
+					 res, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		SHADOW_HEIGHT = res, SHADOW_WIDTH = res;
+	} else if (type == SET_PSHADOW_RES) {
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+		for (int i = 0; i < 6; i++)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+						 GL_DEPTH_COMPONENT, res, res, 0,
+						 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		PSHADOW_HEIGHT = res, PSHADOW_WIDTH = res;
+	}
+}
 
