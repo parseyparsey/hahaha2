@@ -1551,7 +1551,7 @@ void rendershadow(Shader &shader){
 	plane00.draw(shader);
 
 
-	int plightnum = sizeof(plightPos) / sizeof(plightPos[0]);
+	//int plightnum = sizeof(plightPos) / sizeof(plightPos[0]);
 
 	/*for (int i = 0; i < plightnum; i++) {
 		model = glm::mat4(1.0f);
