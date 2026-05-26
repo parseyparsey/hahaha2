@@ -1442,38 +1442,18 @@ int main() {
 				case 3: msaa_current = 8; break; case 4: msaa_current = 16; break;
 				}
 			}
-			if (ImGui::Combo("Shadow Map", &shadow_current, shadow_res,
-							 IM_ARRAYSIZE(shadow_res))) {
+			if (ImGui::Combo("Shadow Map", &shadow_current, shadow_res, IM_ARRAYSIZE(shadow_res))) {
 				switch (shadow_current) {
-				case 0:
-					shadow_current = 0;
-					shadowResolution(SET_SHADOW_RES, 1024);
-					break;
-				case 1:
-					shadow_current = 1;
-					shadowResolution(SET_SHADOW_RES, 2048);
-					break;
-				case 2:
-					shadow_current = 2;
-					shadowResolution(SET_SHADOW_RES, 4096);
-					break;
+				case 0: shadow_current = 0; shadowResolution(SET_SHADOW_RES, 1024); break;
+				case 1: shadow_current = 1;	shadowResolution(SET_SHADOW_RES, 2048); break;
+				case 2: shadow_current = 2; shadowResolution(SET_SHADOW_RES, 4096); break;
 				}
 			}
-			if (ImGui::Combo("PShadow Map", &pshadow_current, pshadow_res,
-							 IM_ARRAYSIZE(pshadow_res))) {
+			if (ImGui::Combo("PShadow Map", &pshadow_current, pshadow_res, IM_ARRAYSIZE(pshadow_res))) {
 				switch (pshadow_current) {
-				case 0:
-					pshadow_current = 0;
-					shadowResolution(SET_PSHADOW_RES, 1024);
-					break;
-				case 1:
-					pshadow_current = 1;
-					shadowResolution(SET_PSHADOW_RES, 2048);
-					break;
-				case 2:
-					pshadow_current = 2;
-					shadowResolution(SET_PSHADOW_RES, 4096);
-					break;
+				case 0: pshadow_current = 0; shadowResolution(SET_PSHADOW_RES, 1024); break;
+				case 1: pshadow_current = 1; shadowResolution(SET_PSHADOW_RES, 2048); break;
+				case 2: pshadow_current = 2; shadowResolution(SET_PSHADOW_RES, 4096); break;
 				}
 			}
 			ImGui::SliderFloat("Opacity", &f, 0.0f, 1.0f);
