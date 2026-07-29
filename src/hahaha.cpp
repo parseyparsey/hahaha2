@@ -80,7 +80,7 @@ bool toggleMenu = false;
 int flashlight_state = 0;
 bool debugPshadow = true;
 bool fullscreen = false;
-bool isMuted = false;
+bool isMuted = true;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
