@@ -424,7 +424,7 @@ Plane plane00(150);
 //              MISCELLANEOUS             //
 //----------------------------------------//
 
-bool isSkyboxOn = true, isWireframeOn = false, isBlinn = true, isMuted = true, isVsyncOn = true;
+bool isSkyboxOn = true, isWireframeOn = false, isBlinn = true, isMuted = false, isVsyncOn = true;
 float f = 0.694f, vol = 1.0f;
 static int theme_current = 2;
 static int filter_current = 0;
@@ -870,7 +870,7 @@ int main() {
 	//            LOADING AUDIO                  //
 	//-------------------------------------------//
 
-	audio.loadSound("aud00", "audio/_17fun1.wav", true);
+	audio.loadSound("aud00", "audio/kangaenaiyounisuru.wav", true);
 	audio.loadSound("aud01", "audio/honjitsu_.wav", true);
 	audio.loadSound("aud02", "audio/24jikan.wav", true);
 	audio.playSound("aud00", 1.0f);
