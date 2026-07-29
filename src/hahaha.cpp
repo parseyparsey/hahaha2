@@ -80,6 +80,7 @@ bool toggleMenu = false;
 int flashlight_state = 0;
 bool debugPshadow = true;
 bool fullscreen = false;
+bool isMuted = false;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -203,6 +204,18 @@ void processinput(GLFWwindow* window) {
 		isF7pressed = true;
 	} else if (F7STATE == GLFW_RELEASE) {
 		isF7pressed = false;
+	}
+
+	static bool isF8pressed = false;
+	int F8STATE = glfwGetKey(window, GLFW_KEY_F8);
+	if (F8STATE == GLFW_PRESS && !isF8pressed) {
+		if (!isMuted)
+			isMuted = true;
+		else
+			isMuted = false;
+		isF8pressed = true;
+	} else if (F8STATE == GLFW_RELEASE) {
+		isF8pressed = false;
 	}
 
     float camSpeed = 5.0f * deltatime;
@@ -424,7 +437,7 @@ Plane plane00(150);
 //              MISCELLANEOUS             //
 //----------------------------------------//
 
-bool isSkyboxOn = true, isWireframeOn = false, isBlinn = true, isMuted = false, isVsyncOn = true;
+bool isSkyboxOn = true, isWireframeOn = false, isBlinn = true, isVsyncOn = true;
 float f = 0.694f, vol = 1.0f;
 static int theme_current = 2;
 static int filter_current = 0;
