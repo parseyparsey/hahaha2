@@ -338,7 +338,7 @@ bool init0(){
 	monitor = glfwGetPrimaryMonitor();
 	monitor_mode = glfwGetVideoMode(monitor);
 
-	window = glfwCreateWindow(800, 600, "hahaha2", NULL, NULL);
+	window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
 	if (window == NULL){
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
