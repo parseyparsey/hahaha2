@@ -54,6 +54,7 @@ in VS_OUT {
     vec3 normal;
     vec2 TexCoords;
     vec4 fragPosLightSpace;
+    mat3 TBN;
 } fs_in;
 
 //in vec2 TexCoords;
@@ -79,9 +80,22 @@ uniform samplerCube pDepthMap;
 
 vec4 sFragColor;
 
+//nmap
+uniform sampler2D normalMap;
+uniform bool useNormalMap;
+
 void main()
 {
-    vec3 norm = normalize(fs_in.normal);
+    vec3 norm;
+
+    if(useNormalMap){
+        vec3 normalMapSample = texture(normalMap, fs_in.TexCoords).rgb;
+        normalMapSample = normalMapSample * 2.0 - 1.0;
+        norm = normalize(fs_in.TBN * normalMapSample);
+    } else {
+        norm = normalize(fs_in.normal);
+    }
+
     vec3 viewDir = normalize(viewPos - fs_in.fragPos);
 
     vec3 result = calcDirLight(dirlight, norm, viewDir);

@@ -138,7 +138,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
 	if (!success)
 	{
 		glGetProgramInfoLog(ID, 512, NULL, infolog);
-		std::cout << "SHADER" << li << ": " << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" <<
+		std::cout << "SHADER" << li << ": " << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n\n" <<
 			infolog << std::endl;
 	}
 	else {
