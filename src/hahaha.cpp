@@ -1428,6 +1428,7 @@ int main() {
 		if (toggleMenu) {
 			ImGui::SetNextWindowBgAlpha(f);
 			ImGui::Begin("Menu");
+			ImGui::Text("Resolution: %dx%d", wwidth, wheight);
 			ImGui::Text(title);
 			ImGui::Checkbox("Skybox", &isSkyboxOn);
 			ImGui::Checkbox("Wireframe Mode", &isWireframeOn);
