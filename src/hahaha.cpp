@@ -896,8 +896,6 @@ int main() {
 	audio.playSound("aud01", 1.0f);
 	audio.playSound("aud02", 1.0f);
 
-	//std::cout << "plight_num = " << plight_num << "\n";
-
     //------------------------------//
     //         RENDER LOOP          //
     //------------------------------//
@@ -1250,7 +1248,7 @@ int main() {
 
 		//nmap_object
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-3.0f, 1.0f, -6.0f));
+		model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -4.0f));
 		model = glm::rotate(model, glm::radians(60.0f),
 							glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::rotate(model, glm::radians(10.0f),
