@@ -84,6 +84,7 @@ int flashlight_state = 0;
 bool debugPshadow = true;
 bool fullscreen = false;
 bool isMuted = true;
+bool debug_normalmapping = true;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -1146,7 +1147,6 @@ int main() {
 		lightshaderobj.setInt("shadowMap", 4);
 		lightshaderobj.setInt("normalMap", 7);
 		lightshaderobj.setBool("useNormalMap", false);
-		//dsaf
 
 		lightshaderobj.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
 		lightshaderobj.setVec3f("dirlight.ambient",  0.00f, 0.00f, 0.00f);//*/0.01f, 0.01f, 0.01f); //0.01
@@ -1260,7 +1260,8 @@ int main() {
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_2D, bricktxtnorm.ID);
 		lightshaderobj.setMat4("model", model);
-		lightshaderobj.setBool("useNormalMap", true);
+		if (debug_normalmapping)
+			lightshaderobj.setBool("useNormalMap", true);
 		renderQuad();
 		lightshaderobj.setBool("useNormalMap", false);
 
@@ -1336,11 +1337,11 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, majimatxt.ID);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		lightshaderobj_instanced.use();
+		/*lightshaderobj_instanced.use();
 		lightshaderobj_instanced.setInt("material.texture_diffuse", 0);
 		lightshaderobj_instanced.setInt("material.texture_specular", 1);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, rocktxt.ID);// */ rock.textures_loaded[0].id);
+		glBindTexture(GL_TEXTURE_2D, rocktxt.ID);//rock.textures_loaded[0].id);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, blacktxt.ID);
 		for (unsigned int i = 0; i < rock.meshes.size(); i++)
@@ -1349,7 +1350,7 @@ int main() {
 			glDrawElementsInstanced(GL_TRIANGLES, static_cast<unsigned int>(rock.meshes[i].indices.size()),
 				GL_UNSIGNED_INT, 0, amount);
 			glBindVertexArray(0);
-		}
+		}*/
 
 		glBindVertexArray(VAO2);
 
@@ -1461,6 +1462,7 @@ int main() {
 			ImGui::Checkbox("Mute", &isMuted);
 			ImGui::Checkbox("Vsync", &isVsyncOn);
 			ImGui::Checkbox("debug_pshadow", &debugPshadow);
+			ImGui::Checkbox("debug_normalmapping", &debug_normalmapping);
 			if (ImGui::Combo("Themes", &theme_current, themes, IM_ARRAYSIZE(themes))) {
 				switch (theme_current) {
 				case 0: ImGui::StyleColorsClassic(); break;
