@@ -85,6 +85,7 @@ bool debugPshadow = true;
 bool fullscreen = false;
 bool isMuted = true;
 bool debug_normalmapping = true;
+bool debug_parallaxmapping = true;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -417,6 +418,9 @@ Texture windowtxt("textures/window01.png", false, false);
 Texture bricktxt("textures/brickwall.jpg", false, false);
 Texture bricktxtnorm("textures/brickwall_normal.jpg", false, false);
 Texture whitetxt("textures/white.png", false, false);
+Texture bricks2("textures/bricks2.jpg", false, false);
+Texture bricks2_normal("textures/bricks2_normal.jpg", false, false);
+Texture bricks2_disp("textures/bricks2_disp.jpg", false, false);
 
 std::vector<std::string> faces
 {
@@ -1147,6 +1151,9 @@ int main() {
 		lightshaderobj.setInt("shadowMap", 4);
 		lightshaderobj.setInt("normalMap", 7);
 		lightshaderobj.setBool("useNormalMap", false);
+		lightshaderobj.setBool("useParallaxMap", false);
+		lightshaderobj.setInt("parallaxDepthMap", 8);
+		lightshaderobj.setFloat("height_scale", 0.1f);
 
 		lightshaderobj.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
 		lightshaderobj.setVec3f("dirlight.ambient",  0.00f, 0.00f, 0.00f);//*/0.01f, 0.01f, 0.01f); //0.01
@@ -1263,7 +1270,21 @@ int main() {
 		if (debug_normalmapping)
 			lightshaderobj.setBool("useNormalMap", true);
 		renderQuad();
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(3.0f, 1.0f, -6.0f));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bricks2.ID);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, bricks2_normal.ID);
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_2D, bricks2_disp.ID);
+		lightshaderobj.setMat4("model", model);
+		if (debug_parallaxmapping)
+			lightshaderobj.setBool("useParallaxMap", true);
+		renderQuad();
 		lightshaderobj.setBool("useNormalMap", false);
+		lightshaderobj.setBool("useParallaxMap", false);
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 73.0f, 0.0f));
@@ -1463,6 +1484,7 @@ int main() {
 			ImGui::Checkbox("Vsync", &isVsyncOn);
 			ImGui::Checkbox("debug_pshadow", &debugPshadow);
 			ImGui::Checkbox("debug_normalmapping", &debug_normalmapping);
+			ImGui::Checkbox("debug_parallaxmapping", &debug_parallaxmapping);
 			if (ImGui::Combo("Themes", &theme_current, themes, IM_ARRAYSIZE(themes))) {
 				switch (theme_current) {
 				case 0: ImGui::StyleColorsClassic(); break;
