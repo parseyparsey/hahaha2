@@ -98,19 +98,20 @@ void main()
     vec2 TexCoords = fs_in.TexCoords;
     vec3 tangentViewDir;
 
+    if(useParallaxMap){
+        tangentViewDir = normalize(transpose(fs_in.TBN) * (viewPos - fs_in.fragPos));
+        TexCoords = ParallaxMapping(TexCoords, tangentViewDir);
+
+        if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
+            discard;
+    }
+
     if(useNormalMap){
-        vec3 normalMapSample = texture(normalMap, fs_in.TexCoords).rgb;
+        vec3 normalMapSample = texture(normalMap, TexCoords).rgb;
         normalMapSample = normalMapSample * 2.0 - 1.0;
         norm = normalize(fs_in.TBN * normalMapSample);
     } else {
         norm = normalize(fs_in.normal);
-    }
-
-    if(useParallaxMap){
-        tangentViewDir = normalize(transpose(fs_in.TBN) * (viewPos - fs_in.fragPos));
-        TexCoords = ParallaxMapping(fs_in.TexCoords, tangentViewDir);
-        if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
-            discard;
     }
 
     vec3 viewDir = normalize(viewPos - fs_in.fragPos);
@@ -329,10 +330,11 @@ float PointShadowCalc(vec3 fragPos, vec3 plightPos)
 }
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){
-    //float height =  texture(parallaxDepthMap, texCoords).r;    
-    //vec2 p = viewDir.xy / viewDir.z * (height * height_scale);
-    //return texCoords - p; 
-    
+    float height =  texture(parallaxDepthMap, texCoords).r;    
+    vec2 p = viewDir.xy / viewDir.z * (height * height_scale);
+    return texCoords - p; 
+
+    /*
     // number of depth layers
     const float minLayers = 8;
     const float maxLayers = 32;
@@ -370,5 +372,5 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){
     float weight = afterDepth / (afterDepth - beforeDepth);
     vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return finalTexCoords;
+    return finalTexCoords;*/
 }

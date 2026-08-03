@@ -415,8 +415,9 @@ Texture container2txt("textures/container2.png", false, false);
 Texture container2txt_specular("textures/container2_specular.png", false, false);
 Texture naonao("textures/nao_cropped.jpg", true, false, 1);
 Texture windowtxt("textures/window01.png", false, false);
-Texture bricktxt("textures/brickwall.jpg", false, false);
 Texture bricktxtnorm("textures/brickwall_normal.jpg", false, false);
+Texture bricktxt("textures/brickwall.jpg", false, false);
+Texture bricktxtdisp("textures/brickwall_disp.png", false, false);
 Texture whitetxt("textures/white.png", false, false);
 Texture bricks2("textures/bricks2.jpg", false, false);
 Texture bricks2_normal("textures/bricks2_normal.jpg", false, false);
@@ -1286,10 +1287,10 @@ int main() {
 		lightshaderobj.setMat4("model", model);
 		if (debug_parallaxmapping)
 			lightshaderobj.setBool("useParallaxMap", true);
-		renderQuad();
+		renderQuad();//
 
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(5.0f, 1.0f, -16.0f));
+		model = glm::translate(model, glm::vec3(5.0f, 1.0f, -8.0f));
 		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 		model = glm::rotate(model, glm::radians(45.0f),
 							glm::vec3(0.0f, -1.0f, 0.0f));
@@ -1302,12 +1303,9 @@ int main() {
 		glActiveTexture(GL_TEXTURE9);
 		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//fifiesdfsdf
 		lightshaderobj.setMat4("model", model);
-		//lightshaderobj.setFloat("height_scale", 0.5f);
 		if (debug_parallaxmapping)
 			lightshaderobj.setBool("useParallaxMap", true);
-		lightshaderobj.setBool("useNormalMap", true);
 		renderQuad();
 		lightshaderobj.setFloat("height_scale", 0.1f);
 
