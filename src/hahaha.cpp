@@ -421,6 +421,9 @@ Texture whitetxt("textures/white.png", false, false);
 Texture bricks2("textures/bricks2.jpg", false, false);
 Texture bricks2_normal("textures/bricks2_normal.jpg", false, false);
 Texture bricks2_disp("textures/bricks2_disp.jpg", false, false);
+Texture toybox_diff("textures/wood.png", false, false);
+Texture toybox_norm("textures/toy_box_normal.png", false, false);
+Texture toybox_disp("textures/toy_box_disp.png", false, false);
 
 std::vector<std::string> faces
 {
@@ -1153,6 +1156,7 @@ int main() {
 		lightshaderobj.setBool("useNormalMap", false);
 		lightshaderobj.setBool("useParallaxMap", false);
 		lightshaderobj.setInt("parallaxDepthMap", 8);
+		lightshaderobj.setInt("debug_parallaxDepthMap", 9);
 		lightshaderobj.setFloat("height_scale", 0.1f);
 
 		lightshaderobj.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
@@ -1283,6 +1287,30 @@ int main() {
 		if (debug_parallaxmapping)
 			lightshaderobj.setBool("useParallaxMap", true);
 		renderQuad();
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(5.0f, 1.0f, -16.0f));
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+		model = glm::rotate(model, glm::radians(45.0f),
+							glm::vec3(0.0f, -1.0f, 0.0f));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, toybox_diff.ID);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, toybox_norm.ID);
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
+		glActiveTexture(GL_TEXTURE9);
+		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//fifiesdfsdf
+		lightshaderobj.setMat4("model", model);
+		//lightshaderobj.setFloat("height_scale", 0.5f);
+		if (debug_parallaxmapping)
+			lightshaderobj.setBool("useParallaxMap", true);
+		lightshaderobj.setBool("useNormalMap", true);
+		renderQuad();
+		lightshaderobj.setFloat("height_scale", 0.1f);
+
 		lightshaderobj.setBool("useNormalMap", false);
 		lightshaderobj.setBool("useParallaxMap", false);
 
