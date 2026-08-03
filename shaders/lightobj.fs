@@ -334,7 +334,6 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){
     /*float height =  texture(parallaxDepthMap, texCoords).r;    
     vec2 p = viewDir.xy / viewDir.z * (height * height_scale);
     return texCoords - p; */
-
     
     // number of depth layers
     const float minLayers = 8;
@@ -361,6 +360,8 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){
         // get depth of next layer
         currentLayerDepth += layerDepth;  
     }
+
+    //return currentTexCoords;
     
     // get texture coordinates before collision (reverse operations)
     vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
