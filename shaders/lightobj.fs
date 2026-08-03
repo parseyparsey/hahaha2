@@ -125,6 +125,7 @@ void main()
     result += calcSpotLight(spotlight, norm, fs_in.fragPos, viewDir, TexCoords);
 
     FragColor = vec4(result, 1.0);
+
     //FragColor = vec4(vec3(texture(debug_parallaxDepthMap, fs_in.TexCoords).r), 1.0);
     
     //FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
@@ -330,11 +331,11 @@ float PointShadowCalc(vec3 fragPos, vec3 plightPos)
 }
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){
-    float height =  texture(parallaxDepthMap, texCoords).r;    
+    /*float height =  texture(parallaxDepthMap, texCoords).r;    
     vec2 p = viewDir.xy / viewDir.z * (height * height_scale);
-    return texCoords - p; 
+    return texCoords - p; */
 
-    /*
+    
     // number of depth layers
     const float minLayers = 8;
     const float maxLayers = 32;
@@ -372,5 +373,5 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){
     float weight = afterDepth / (afterDepth - beforeDepth);
     vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return finalTexCoords;*/
+    return finalTexCoords;
 }

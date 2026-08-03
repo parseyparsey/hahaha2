@@ -1287,7 +1287,7 @@ int main() {
 		lightshaderobj.setMat4("model", model);
 		if (debug_parallaxmapping)
 			lightshaderobj.setBool("useParallaxMap", true);
-		renderQuad();//
+		renderQuad();
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(5.0f, 1.0f, -8.0f));
