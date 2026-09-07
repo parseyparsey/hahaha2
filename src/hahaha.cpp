@@ -371,6 +371,7 @@ bool init0(){
 	//glEnable(GL_MULTISAMPLE);
 	//glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CCW);
+	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1170,14 +1171,14 @@ int main() {
 
 		lightshaderobj.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
 		lightshaderobj.setVec3f("dirlight.ambient",  0.00f, 0.00f, 0.00f);//*/0.01f, 0.01f, 0.01f); //0.01
-		lightshaderobj.setVec3f("dirlight.diffuse",  0.2f, 0.2f, 0.2f); // .2
+		lightshaderobj.setVec3f("dirlight.diffuse",  0.6f, 0.6f, 0.6f); // .2
 		lightshaderobj.setVec3f("dirlight.specular", 0.0f, 0.0f, 0.0f);
 
 		lightshaderobj.setFloat("pLight[0].constant", 1.0f);
 		lightshaderobj.setFloat("pLight[0].linear", 0.09f);
 		lightshaderobj.setFloat("pLight[0].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[0].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[0].diffuse", 1.0f, 1.0f, 1.0f);
+		lightshaderobj.setVec3f("pLight[0].ambient", 0.2f, 0.2f, 0.2f); // default 0.05
+		lightshaderobj.setVec3f("pLight[0].diffuse", 2.0f, 2.0f, 2.0f);
 		lightshaderobj.setVec3f("pLight[0].specular", 0.6f, 0.6f, 0.6f);
 		lightshaderobj.setVec3("pLight[0].position", plightPos[0]);
 
