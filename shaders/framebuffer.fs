@@ -7,6 +7,9 @@ uniform sampler2D ourTexture;
 uniform float width;
 uniform int fbmode;
 
+uniform bool hdr;
+uniform float exposure;
+
 const float offset = 1.0 / 300.0;
 
 #define KERNEL 1
@@ -22,8 +25,23 @@ vec4 Halfcolor();
 
 void main()
 {
+    vec4 mappedfin;
+
+    if (hdr){
+        const float gamma = 2.2;
+        vec3 hdrColor = texture(ourTexture, TexCoords).rgb;
+
+        vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+
+        mapped = pow(mapped, vec3(1.0 / gamma));
+
+        mappedfin = vec4(mapped, 1.0);
+    } else {
+        mappedfin = texture(ourTexture, TexCoords);
+    }
+
     switch(fbmode){
-        case 0: FragColor = Normal(); break;
+        case 0: FragColor = mappedfin;/*Normal();*/ break;
         case 1: FragColor = Grayscale(); break;
         case 2: FragColor = Negative(); break;
         case 3: FragColor = Kernel(1); break;

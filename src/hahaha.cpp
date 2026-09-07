@@ -86,6 +86,8 @@ bool fullscreen = false;
 bool isMuted = true;
 bool debug_normalmapping = true;
 bool debug_parallaxmapping = true;
+bool debug_hdr = false;
+float hdr_exposure = 1.0;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -409,20 +411,26 @@ Shader pshadow_depth("shaders/pshadow_depth.vs", "shaders/pshadow_depth.fs", "sh
 //            SETTING UP TEXTURES               //
 //----------------------------------------------//
 
+/*
+	__HDR DEBUG NOTE__
+	SWITCH GAMMA CORRECTION ON FOR DIFFUSE/ALBEDO TEXTURES
+	EVERYTHING ELSE STAYS OFF!!!
+*/
+
 Texture kiryutxt("textures/kiryu.png", false, false);
 Texture majimatxt("textures/majima.png", false, false);
-Texture container2txt("textures/container2.png", false, false);
+Texture container2txt("textures/container2.png", false, true);
 Texture container2txt_specular("textures/container2_specular.png", false, false);
-Texture naonao("textures/nao_cropped.jpg", true, false, 1);
+Texture naonao("textures/nao_cropped.jpg", true, true, 1);
 Texture windowtxt("textures/window01.png", false, false);
 Texture bricktxtnorm("textures/brickwall_normal.jpg", false, false);
-Texture bricktxt("textures/brickwall.jpg", false, false);
+Texture bricktxt("textures/brickwall.jpg", false, true);
 Texture bricktxtdisp("textures/brickwall_disp.png", false, false);
 Texture whitetxt("textures/white.png", false, false);
-Texture bricks2("textures/bricks2.jpg", false, false);
+Texture bricks2("textures/bricks2.jpg", false, true);
 Texture bricks2_normal("textures/bricks2_normal.jpg", false, false);
 Texture bricks2_disp("textures/bricks2_disp.jpg", false, false);
-Texture toybox_diff("textures/wood.png", false, false);
+Texture toybox_diff("textures/wood.png", false, true);
 Texture toybox_norm("textures/toy_box_normal.png", false, false);
 Texture toybox_disp("textures/toy_box_disp.png", false, false);
 
@@ -720,7 +728,7 @@ int main() {
 
 	glGenTextures(1, &colorbuffer);
 	glBindTexture(GL_TEXTURE_2D, colorbuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGBA16F, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -936,7 +944,7 @@ int main() {
 		//plightPos[0].z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 
 		glBindTexture(GL_TEXTURE_2D, colorbuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wwidth, wheight, 0, GL_RGBA16F, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
@@ -1185,15 +1193,15 @@ int main() {
 		lightshaderobj.setFloat("pLight[2].linear", 0.09f);
 		lightshaderobj.setFloat("pLight[2].quadratic", 0.032f);
 		lightshaderobj.setVec3f("pLight[2].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[2].diffuse", 0.5f, 0.5f, 0.5f);
-		lightshaderobj.setVec3f("pLight[2].specular", 0.3f, 0.3f, 0.3f);
+		lightshaderobj.setVec3f("pLight[2].diffuse", 0.4f, 0.0f, 1.0f);
+		lightshaderobj.setVec3f("pLight[2].specular", 0.4f, 0.0f, 1.0f);
 		lightshaderobj.setVec3("pLight[2].position", plightPos[2]);
 
 		lightshaderobj.setFloat("pLight[3].constant", 1.0f);
 		lightshaderobj.setFloat("pLight[3].linear", 0.09f);
 		lightshaderobj.setFloat("pLight[3].quadratic", 0.032f);
 		lightshaderobj.setVec3f("pLight[3].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[3].diffuse", 0.5f, 0.5f, 0.5f);
+		lightshaderobj.setVec3f("pLight[3].diffuse", 0.5f, 0.0f, 0.0f);
 		lightshaderobj.setVec3f("pLight[3].specular", 0.6f, 0.6f, 0.6f);
 		lightshaderobj.setVec3("pLight[3].position", plightPos[3]);
 
@@ -1412,6 +1420,12 @@ int main() {
 			model = glm::translate(model, plightPos[i]);
 			model = glm::scale(model, glm::vec3(0.2f));
 			lightshader.setMat4("model", model);
+			if (i == 2) {
+				lightshader.setBool("colored", true);
+				lightshader.setVec3f("color", 0.4f, 0.0f, 1.0f);
+			} else {
+				lightshader.setBool("colored", false);
+			}
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
@@ -1491,12 +1505,15 @@ int main() {
 		shader01.use();
 		shader01.setFloat("width", (float)wwidth);
 		shader01.setInt("fbmode", filter_current);
+		shader01.setBool("hdr", debug_hdr);
+		shader01.setFloat("exposure", hdr_exposure);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, colorbuffer);
 		glBindVertexArray(VAO4);
 		//glEnable(GL_FRAMEBUFFER_SRGB);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		//glDisable(GL_FRAMEBUFFER_SRGB);
+
 
 		if (toggleMenu) {
 			ImGui::SetNextWindowBgAlpha(f);
@@ -1511,6 +1528,7 @@ int main() {
 			ImGui::Checkbox("debug_pshadow", &debugPshadow);
 			ImGui::Checkbox("debug_normalmapping", &debug_normalmapping);
 			ImGui::Checkbox("debug_parallaxmapping", &debug_parallaxmapping);
+			ImGui::Checkbox("debug_hdr", &debug_hdr);
 			if (ImGui::Combo("Themes", &theme_current, themes, IM_ARRAYSIZE(themes))) {
 				switch (theme_current) {
 				case 0: ImGui::StyleColorsClassic(); break;
@@ -1545,6 +1563,7 @@ int main() {
 				case 2: pshadow_current = 2; shadowResolution(SET_PSHADOW_RES, 4096); break;
 				}
 			}
+			ImGui::SliderFloat("hdr_exposure", &hdr_exposure, 0.0f, 10.0f);
 			ImGui::SliderFloat("Opacity", &f, 0.0f, 1.0f);
 			ImGui::SliderFloat("Volume", &vol, 0.0f, 1.0f);
 			if (ImGui::Button("Hide"))
@@ -1587,6 +1606,12 @@ unsigned int loadCubemap(std::vector<std::string> faces) {
     unsigned int cubemapID;
     glGenTextures(1, &cubemapID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapID);
+
+	/*
+	__HDR DEBUG NOTE__
+	SWITCH GAMMA CORRECTION ON FOR DIFFUSE/ALBEDO TEXTURES
+	EVERYTHING ELSE STAYS OFF!!!
+	*/
 
     int width, height, nrChannels;
     for (unsigned int i = 0; i < faces.size(); i++) {
