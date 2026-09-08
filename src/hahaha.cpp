@@ -88,6 +88,7 @@ bool debug_normalmapping = true;
 bool debug_parallaxmapping = true;
 bool debug_hdr = false;
 float hdr_exposure = 1.0;
+bool debug_fb_srgb = true;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -418,12 +419,12 @@ Shader pshadow_depth("shaders/pshadow_depth.vs", "shaders/pshadow_depth.fs", "sh
 	EVERYTHING ELSE STAYS OFF!!!
 */
 
-Texture kiryutxt("textures/kiryu.png", false, false);
-Texture majimatxt("textures/majima.png", false, false);
+Texture kiryutxt("textures/kiryu.png", false, true);
+Texture majimatxt("textures/majima.png", false, true);
 Texture container2txt("textures/container2.png", false, true);
 Texture container2txt_specular("textures/container2_specular.png", false, false);
 Texture naonao("textures/nao_cropped.jpg", true, true, 1);
-Texture windowtxt("textures/window01.png", false, false);
+Texture windowtxt("textures/window01.png", false, true);
 Texture bricktxtnorm("textures/brickwall_normal.jpg", false, false);
 Texture bricktxt("textures/brickwall.jpg", false, true);
 Texture bricktxtdisp("textures/brickwall_disp.png", false, false);
@@ -942,6 +943,11 @@ int main() {
 		else
 			glfwSwapInterval(0);
 
+		if (debug_fb_srgb)
+			glEnable(GL_FRAMEBUFFER_SRGB);
+		else
+			glDisable(GL_FRAMEBUFFER_SRGB);
+
 		//plightPos[0].z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 
 		glBindTexture(GL_TEXTURE_2D, colorbuffer);
@@ -1171,15 +1177,15 @@ int main() {
 
 		lightshaderobj.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
 		lightshaderobj.setVec3f("dirlight.ambient",  0.00f, 0.00f, 0.00f);//*/0.01f, 0.01f, 0.01f); //0.01
-		lightshaderobj.setVec3f("dirlight.diffuse",  0.6f, 0.6f, 0.6f); // .2
+		lightshaderobj.setVec3f("dirlight.diffuse",  0.2f, 0.2f, 0.2f); // .2
 		lightshaderobj.setVec3f("dirlight.specular", 0.0f, 0.0f, 0.0f);
 
 		lightshaderobj.setFloat("pLight[0].constant", 1.0f);
 		lightshaderobj.setFloat("pLight[0].linear", 0.09f);
 		lightshaderobj.setFloat("pLight[0].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[0].ambient", 0.2f, 0.2f, 0.2f); // default 0.05
-		lightshaderobj.setVec3f("pLight[0].diffuse", 2.0f, 2.0f, 2.0f);
-		lightshaderobj.setVec3f("pLight[0].specular", 0.6f, 0.6f, 0.6f);
+		lightshaderobj.setVec3f("pLight[0].ambient", 0.05f, 0.05f, 0.05f); // default 0.05
+		lightshaderobj.setVec3f("pLight[0].diffuse", 0.6f, 0.6f, 0.6f);
+		lightshaderobj.setVec3f("pLight[0].specular", 0.3f, 0.3f, 0.3f);
 		lightshaderobj.setVec3("pLight[0].position", plightPos[0]);
 
 		lightshaderobj.setFloat("pLight[1].constant", 1.0f);
@@ -1529,6 +1535,7 @@ int main() {
 			ImGui::Checkbox("debug_pshadow", &debugPshadow);
 			ImGui::Checkbox("debug_normalmapping", &debug_normalmapping);
 			ImGui::Checkbox("debug_parallaxmapping", &debug_parallaxmapping);
+			ImGui::Checkbox("GL_FRAMEBUFFER_SRGB", &debug_fb_srgb);
 			ImGui::Checkbox("debug_hdr", &debug_hdr);
 			if (ImGui::Combo("Themes", &theme_current, themes, IM_ARRAYSIZE(themes))) {
 				switch (theme_current) {
@@ -1618,10 +1625,26 @@ unsigned int loadCubemap(std::vector<std::string> faces) {
     for (unsigned int i = 0; i < faces.size(); i++) {
         unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
 
+		GLenum cmformat = GL_RGB;
+		if (nrChannels == 1)
+			cmformat = GL_RED;
+		else if (nrChannels == 3)
+			cmformat = GL_RGB;
+		else if (nrChannels == 4)
+			cmformat = GL_RGBA;
+
         if (data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
-                         width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            stbi_image_free(data);
+            //glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
+            //             width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            
+			if (nrChannels == 3)
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB, 
+					width, height, 0,GL_RGB, GL_UNSIGNED_BYTE, data);
+			else if (nrChannels == 4)
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB_ALPHA,
+					width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			
+			stbi_image_free(data);
         }
         else {
             std::cout << "Cubemap failed to load at path: " << faces[i]
