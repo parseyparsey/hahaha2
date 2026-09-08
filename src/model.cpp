@@ -25,7 +25,7 @@ void Model::loadModel(std::string path) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
-	std::cout << "ASSIMP" << mi << ": " << path << "\n";
+	std::cout << "MODEL" << mi << ": " << path << "\n";
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
@@ -104,7 +104,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	return Mesh(vertices, indices, textures);
 }
 
-unsigned int TextureFromFile(const char* path, const std::string& directory, bool flip)
+unsigned int TextureFromFile(const char* path, const std::string& directory, bool flip, bool gamma_corrected)
 {
 	std::string filename = std::string(path);
 	filename = directory + '/' + filename;
@@ -119,6 +119,16 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 
 	int width, height, nrComponents;
 	unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+	float rawMB = (width * height * nrComponents) / (1024.0f * 1024.0f);
+	float estVRAM_MB = rawMB * 1.33f;
+
+	Model::tRawMem += rawMB;
+	Model::tEstMemWMip += estVRAM_MB;
+
+	std::cout << "MODELTXT" << mi << ": " << path << " | " << width << "x"
+			  << height << " (" << nrComponents << "ch)" << " | " << rawMB << "MB"
+			  << " | ~" << estVRAM_MB << " MB (w/ mips)" << std::endl;
+
 	if (data)
 	{
 		GLenum format;
@@ -130,7 +140,19 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 			format = GL_RGBA;
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+		if (gamma_corrected) {
+			if (nrComponents == 3)
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, width, height, 0, GL_RGB,
+							 GL_UNSIGNED_BYTE, data);
+			else if (nrComponents == 4)
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, width, height, 0,
+							 GL_RGBA, GL_UNSIGNED_BYTE, data);
+		} else {
+			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		}
+
+		
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -169,24 +191,24 @@ std::vector<mTexture> Model::loadMaterialTexture(aiMaterial* mat, aiTextureType 
 			mTexture texture;
 			switch (isFlipped) {
 				case 0: if (typeName == "texture_diffuse")
-							texture.id = TextureFromFile(str.C_Str(), directory, true);
+							texture.id = TextureFromFile(str.C_Str(), directory, true, true);
 						if (typeName == "texture_specular")
-							texture.id = TextureFromFile(str.C_Str(), directory, false);
+							texture.id = TextureFromFile(str.C_Str(), directory, false, false);
 						break;
 				case 1: if (typeName == "texture_diffuse")
-							texture.id = TextureFromFile(str.C_Str(), directory, false);
+							texture.id = TextureFromFile(str.C_Str(), directory, false, true);
 						if (typeName == "texture_specular")
-							texture.id = TextureFromFile(str.C_Str(), directory, true);
+							texture.id = TextureFromFile(str.C_Str(), directory, true, false);
 						break;
 				case 2: if (typeName == "texture_diffuse")
-							texture.id = TextureFromFile(str.C_Str(), directory, true);
+							texture.id = TextureFromFile(str.C_Str(), directory, true, true);
 						if (typeName == "texture_specular")
-							texture.id = TextureFromFile(str.C_Str(), directory, true);
+							texture.id = TextureFromFile(str.C_Str(), directory, true, false);
 						break;
 				case 3: if (typeName == "texture_diffuse")
-							texture.id = TextureFromFile(str.C_Str(), directory, false);
+							texture.id = TextureFromFile(str.C_Str(), directory, false, true);
 						if (typeName == "texture_specular")
-							texture.id = TextureFromFile(str.C_Str(), directory, false);
+							texture.id = TextureFromFile(str.C_Str(), directory, false, false);
 						break;
 			}
 			texture.type = typeName;

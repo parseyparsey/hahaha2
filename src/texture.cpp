@@ -25,7 +25,17 @@ Texture::Texture(const char* texturePath, bool isFlipped, bool isGammaCorrected,
 
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
-	std::cout << "TEXTURE" << ti << ": " << texturePath << std::endl;
+
+	// VRAM estimate: raw size * 1.33 for mipmap chain overhead
+	float rawMB = (width * height * nrChannels) / (1024.0f * 1024.0f);
+	float estVRAM_MB = rawMB * 1.33f;
+
+	Texture::tRawMem += rawMB;
+	Texture::tEstMemWMip += estVRAM_MB;
+
+	std::cout << "TEXTURE" << ti << ": " << texturePath << " | " << width << "x"
+			  << height << " (" << nrChannels << "ch)" << " | " << rawMB << "MB"
+			  << " | ~" << estVRAM_MB << " MB (w/ mips)" << std::endl;
 
 	GLenum format = GL_RGB;
 	if (nrChannels == 1)

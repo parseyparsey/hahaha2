@@ -31,6 +31,11 @@ public:
 	void Draw(Shader& shader);
 	std::vector<Mesh> meshes;
 	std::vector<mTexture> textures_loaded;
+	//inline static bool model_gamma_correction = true;
+
+	inline static float tRawMem = 0.0f;
+	inline static float tEstMemWMip = 0.0f;
+
 private:
 	std::string directory;
 

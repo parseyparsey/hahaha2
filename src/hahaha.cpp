@@ -86,9 +86,9 @@ bool fullscreen = false;
 bool isMuted = true;
 bool debug_normalmapping = true;
 bool debug_parallaxmapping = true;
-bool debug_hdr = false;
+bool debug_hdr = true;
 float hdr_exposure = 1.0;
-bool debug_fb_srgb = true;
+bool debug_fb_srgb = false;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -372,7 +372,7 @@ bool init0(){
 	//glEnable(GL_MULTISAMPLE);
 	//glEnable(GL_CULL_FACE);
 	//glFrontFace(GL_CCW);
-	glEnable(GL_FRAMEBUFFER_SRGB);
+	//glEnable(GL_FRAMEBUFFER_SRGB);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -428,7 +428,7 @@ Texture windowtxt("textures/window01.png", false, true);
 Texture bricktxtnorm("textures/brickwall_normal.jpg", false, false);
 Texture bricktxt("textures/brickwall.jpg", false, true);
 Texture bricktxtdisp("textures/brickwall_disp.png", false, false);
-Texture whitetxt("textures/white.png", false, false);
+Texture whitetxt("textures/white.png", false, true);
 Texture bricks2("textures/bricks2.jpg", false, true);
 Texture bricks2_normal("textures/bricks2_normal.jpg", false, false);
 Texture bricks2_disp("textures/bricks2_disp.jpg", false, false);
@@ -454,7 +454,7 @@ unsigned int skybox = loadCubemap(faces);
 Model rock("models/rock/rock.obj", FLIPPED_0);
 Model planet("models/planet/planet.obj", FLIPPED_0);
 Model backpack("models/backpack/backpack.obj", FLIPPED_D);
-Model oillamp("models/oil_can_SF/oil_can_SF.obj", FLIPPED_0);
+//Model oillamp("models/oil_can_SF/oil_can_SF.obj", FLIPPED_0);
 Plane plane00(150);
 
 //----------------------------------------//
@@ -915,6 +915,12 @@ int main() {
 	audio.playSound("aud01", 1.0f);
 	audio.playSound("aud02", 1.0f);
 
+	cout << "TEXTURE::tRawMem::" << Texture::tRawMem
+		 << "MB::tEstMemWMip::" << Texture::tEstMemWMip << "MB" << endl;
+
+	cout << "MODEL::tRawMem::" << Model::tRawMem
+		 << "MB::tEstMemWMip::" << Model::tEstMemWMip << "MB" << endl;
+
     //------------------------------//
     //         RENDER LOOP          //
     //------------------------------//
@@ -1344,7 +1350,7 @@ int main() {
 		model = glm::translate(model, glm::vec3(-7.0f, 1.0f, -9.0f));
 		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
 		lightshaderobj.setMat4("model", model);
-		oillamp.Draw(lightshaderobj);
+		//oillamp.Draw(lightshaderobj);
 
 		model = glm::translate(model, glm::vec3(-30.0f, -11.7f, -30.0f));
 		lightshaderobj.setMat4("model", model);
@@ -1519,8 +1525,7 @@ int main() {
 		glBindVertexArray(VAO4);
 		//glEnable(GL_FRAMEBUFFER_SRGB);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		//glDisable(GL_FRAMEBUFFER_SRGB);
-
+		//glDisable(GL_FRAMEBUFFER_SRGB); 
 
 		if (toggleMenu) {
 			ImGui::SetNextWindowBgAlpha(f);
@@ -1706,7 +1711,7 @@ void rendershadow(Shader &shader){
 	model = glm::translate(model, glm::vec3(-7.0f, 1.0f, -9.0f));
 	model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
 	shader.setMat4("model", model);
-	oillamp.Draw(shader);
+	//oillamp.Draw(shader);
 
 	model = glm::translate(model, glm::vec3(-30.0f, -11.7f, -30.0f));
 	shader.setMat4("model", model);

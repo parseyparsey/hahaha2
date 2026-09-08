@@ -16,34 +16,43 @@ const float offset = 1.0 / 300.0;
 #define BLUR 2
 #define EDGE 3
 
-vec4 Grayscale();
-vec4 Negative();
+vec4 Grayscale(vec4 fragColor);
+vec4 Negative(vec4 fragColor);
 vec4 Normal();
 vec4 Kernel(int mode);
 vec4 BlurredGreyscale();
 vec4 Halfcolor();
 
+vec3 toneMapping(vec3 hdrColor){
+    const float gamma = 2.2;
+
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+
+    mapped = pow(mapped, vec3(1.0 / gamma));
+
+    return mapped;
+}
+
+vec4 mappedfin;
+
 void main()
 {
-    vec4 mappedfin;
 
-    if (hdr){
-        const float gamma = 2.2;
+    if (hdr && fbmode < 3){
+        /*const float gamma = 2.2;
         vec3 hdrColor = texture(ourTexture, TexCoords).rgb;
-
         vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+        mapped = pow(mapped, vec3(1.0 / gamma));*/
 
-        mapped = pow(mapped, vec3(1.0 / gamma));
-
-        mappedfin = vec4(mapped, 1.0);
-    } else {
+        mappedfin = vec4(toneMapping(texture(ourTexture, TexCoords).rgb), 1.0);
+    } else if (fbmode < 3){
         mappedfin = texture(ourTexture, TexCoords);
     }
 
     switch(fbmode){
         case 0: FragColor = mappedfin;/*Normal();*/ break;
-        case 1: FragColor = Grayscale(); break;
-        case 2: FragColor = Negative(); break;
+        case 1: FragColor = Grayscale(mappedfin); break;
+        case 2: FragColor = Negative(mappedfin); break;
         case 3: FragColor = Kernel(1); break;
         case 4: FragColor = Kernel(2); break;
         case 5: FragColor = Kernel(3); break;
@@ -55,15 +64,15 @@ void main()
     //FragColor.rgb = pow(FragColor.rgb, vec3(1.0/gamma));
 }
 
-vec4 Grayscale(){
-    vec4 fragColor = texture(ourTexture, TexCoords);
+vec4 Grayscale(vec4 fragColor){
+    //vec4 fragColor = texture(ourTexture, TexCoords);
     float average = 0.2126 * fragColor.r + 0.7152 * fragColor.g +
                     0.0722 * fragColor.b;
     return vec4(average, average, average, 1.0);
 }
 
-vec4 Negative(){
-    return vec4(vec3(1.0 - texture(ourTexture, TexCoords)), 1.0);
+vec4 Negative(vec4 fragColor){
+    return vec4(vec3(1.0 - fragColor.rgb), 1.0);
 }
 
 vec4 Normal(){
@@ -105,15 +114,22 @@ vec4 Kernel(int mode){
                 );
     }
 
-    vec3 sampleTex[9];
+    /*vec3 sampleTex[9];
     for (int i = 0; i < 9; i++)
     {
         sampleTex[i] = vec3(texture(ourTexture, TexCoords.st + 
                                     offsets[i]));
-    }
+    }*/
+
     vec3 col = vec3(0.0);
-    for (int i = 0; i < 9; i++)
-        col += sampleTex[i] * kernel[i];
+    for (int i = 0; i < 9; i++){
+        vec3 fragsample = texture(ourTexture, TexCoords + offsets[i]).rgb;
+        if (hdr)
+            fragsample = toneMapping(fragsample);
+        col += fragsample * kernel[i];
+    }
+        
+        //col += sampleTex[i] * kernel[i];
 
     return vec4(col, 1.0);
 }
@@ -126,11 +142,12 @@ vec4 BlurredGreyscale(){
 }
 
 vec4 Halfcolor(){
+    vec3 color = texture(ourTexture, TexCoords).rgb;
     vec4 fragColor;
     if (gl_FragCoord.x < width / 2.0){
-        fragColor = BlurredGreyscale();
+        fragColor = Grayscale(vec4((hdr?toneMapping(color):color), 1.0));//BlurredGreyscale();
     } else {
-        fragColor = Kernel(2);
+        fragColor = vec4((hdr?toneMapping(color):color), 1.0);//Kernel(2);
     }
     return fragColor;
 }

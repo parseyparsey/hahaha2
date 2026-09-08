@@ -18,7 +18,7 @@ public:
 	Plane(const int PLANE_SIZE) {
 		const int VERTEX_COUNT = PLANE_SIZE + 1;
 		const float TILE_SIZE = 1.0f;
-		planetxt =  new Texture("textures/plane00.jpg", false, true);
+		planetxt =  new Texture("textures/wood.png"/*"textures/plane00.jpg"*/, false, true);
 		planetxt_specular = new Texture("textures/white.png", false, false);
 
 		for (int z = 0; z < VERTEX_COUNT; ++z) {
