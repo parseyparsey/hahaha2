@@ -918,7 +918,7 @@ int main() {
 	cout << "TEXTURE::tRawMem::" << Texture::tRawMem
 		 << "MB::tEstMemWMip::" << Texture::tEstMemWMip << "MB" << endl;
 
-	cout << "MODEL::tRawMem::" << Model::tRawMem
+	cout << "MODELTXT::tRawMem::" << Model::tRawMem
 		 << "MB::tEstMemWMip::" << Model::tEstMemWMip << "MB" << endl;
 
     //------------------------------//
