@@ -9,6 +9,8 @@ uniform int fbmode;
 
 uniform bool hdr;
 uniform float exposure;
+uniform bool bloom;
+uniform sampler2D bloomTex;
 
 const float offset = 1.0 / 300.0;
 
@@ -44,7 +46,11 @@ void main()
         vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
         mapped = pow(mapped, vec3(1.0 / gamma));*/
 
-        mappedfin = vec4(toneMapping(texture(ourTexture, TexCoords).rgb), 1.0);
+        vec3 hdrColor = texture(ourTexture, TexCoords).rgb;
+        if(bloom)
+            hdrColor += texture(bloomTex, TexCoords).rgb;
+        mappedfin = vec4(toneMapping(hdrColor), 1.0);
+        //mappedfin = vec4(toneMapping(texture(ourTexture, TexCoords).rgb), 1.0);
     } else if (fbmode < 3){
         mappedfin = texture(ourTexture, TexCoords);
     }

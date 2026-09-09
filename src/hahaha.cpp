@@ -89,6 +89,7 @@ bool debug_parallaxmapping = true;
 bool debug_hdr = true;
 float hdr_exposure = 1.0;
 bool debug_fb_srgb = false;
+bool debug_bloom = true;
 
 glm::vec3 cubePositions[] = {
 	glm::vec3(2.0f,   2.0f, -4.0f),
@@ -407,7 +408,8 @@ Shader envmapping("shaders/envmapping.vs", "shaders/envmapping.fs");
 Shader depthshader("shaders/depth_shader.vs", "shaders/depth_shader.fs");
 Shader depthquad("shaders/depth_quad.vs", "shaders/depth_quad.fs");
 Shader pshadow_depth("shaders/pshadow_depth.vs", "shaders/pshadow_depth.fs", "shaders/pshadow_depth.gs");
-
+Shader bloomBrightPass("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs");
+Shader bloomBlurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs");
 
 //----------------------------------------------//
 //            SETTING UP TEXTURES               //
@@ -987,6 +989,8 @@ int main() {
 			fpslastTime += 1.0;
 		}
 
+		static int lastWidth = 0, lastHeight = 0;
+
 		int wheight, wwidth;
 		glfwGetWindowSize(window, &wwidth, &wheight);
 		if (wheight == 0) wheight = 1;
@@ -1004,21 +1008,44 @@ int main() {
 
 		//plightPos[0].z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 
-		glBindTexture(GL_TEXTURE_2D, colorbuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		if (wwidth != lastWidth || wheight != lastHeight) 
+		{
+			glBindTexture(GL_TEXTURE_2D, colorbuffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+						 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+			glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, wwidth, wheight);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, wwidth,
+								  wheight);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-		glBindTexture(GL_TEXTURE_2D, colorbuffer_MSAA);
-		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaa_current, GL_RGBA16F, wwidth, wheight, GL_TRUE);
-		glBindTexture(GL_TEXTURE_2D, 0);
+			glBindTexture(GL_TEXTURE_2D, colorbuffer_MSAA);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaa_current,
+									GL_RGBA16F, wwidth, wheight, GL_TRUE);
+			glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, RBO_MSAA);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa_current, GL_DEPTH24_STENCIL8, wwidth, wheight);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			glBindRenderbuffer(GL_RENDERBUFFER, RBO_MSAA);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa_current,
+											 GL_DEPTH24_STENCIL8, wwidth,
+											 wheight);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+			glBindTexture(GL_TEXTURE_2D, brightTexture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+						 GL_RGBA, GL_FLOAT, nullptr);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			for (int i = 0; i < 2; i++) {
+				glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+							 GL_RGBA, GL_FLOAT, NULL);
+				glBindTexture(GL_TEXTURE_2D, 0);
+			}
+
+			lastWidth = wwidth;
+			lastHeight = wheight;
+		}
 
 		float currentFrame = glfwGetTime();
 		deltatime = currentFrame - lasttime;
@@ -1558,6 +1585,37 @@ int main() {
 			glBlitFramebuffer(0, 0, wwidth, wheight, 0, 0, wwidth, wheight, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		}
 
+		//Bloom Bright Pass
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO_brightPass);
+		glClear(GL_COLOR_BUFFER_BIT);
+		bloomBrightPass.use();
+		bloomBrightPass.setInt("resolvedFrame", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, colorbuffer);
+		bloomBrightPass.setFloat("threshold", 1.0f);
+		glBindVertexArray(VAO4); 
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		//Bloom Blur Pass
+		bool horizontal = true, first_iteration = true;
+		int bloomAmount = 10;
+		bloomBlurShader.use();
+
+		for (unsigned int i = 0; i < bloomAmount; i++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, FBO_pingpong[horizontal]);
+			bloomBlurShader.setInt("horizontal", horizontal);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, first_iteration
+											 ? brightTexture
+											 : pingpongBuffer[!horizontal]);
+			glBindVertexArray(VAO4);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			horizontal = !horizontal;
+			if (first_iteration)
+				first_iteration = false;
+		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -1568,8 +1626,13 @@ int main() {
 		shader01.setInt("fbmode", filter_current);
 		shader01.setBool("hdr", debug_hdr);
 		shader01.setFloat("exposure", hdr_exposure);
+		shader01.setBool("bloom", debug_bloom);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, colorbuffer);
+		shader01.setInt("bloomTex", 1); 
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]); 
+		
 		glBindVertexArray(VAO4);
 		//glEnable(GL_FRAMEBUFFER_SRGB);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1590,6 +1653,7 @@ int main() {
 			ImGui::Checkbox("debug_parallaxmapping", &debug_parallaxmapping);
 			ImGui::Checkbox("GL_FRAMEBUFFER_SRGB", &debug_fb_srgb);
 			ImGui::Checkbox("debug_hdr", &debug_hdr);
+			ImGui::Checkbox("debug_bloom", &debug_bloom);
 			if (ImGui::Combo("Themes", &theme_current, themes, IM_ARRAYSIZE(themes))) {
 				switch (theme_current) {
 				case 0: ImGui::StyleColorsClassic(); break;
