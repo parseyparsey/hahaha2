@@ -1435,7 +1435,7 @@ int main() {
 			lightshader.setMat4("model", model);
 			if (i == 2) {
 				lightshader.setBool("colored", true);
-				lightshader.setVec3f("color", 0.4f, 0.0f, 1.0f);
+				lightshader.setVec3f("color", 1.2f, 0.0f, 3.0f);
 			} else {
 				lightshader.setBool("colored", false);
 			}
