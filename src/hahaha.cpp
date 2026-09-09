@@ -825,13 +825,53 @@ int main() {
 		std::cout << "Framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	//----------------------------------------------------//
-	//             FRAMEBUFFER (POINT SHADOWS)            //
-	//----------------------------------------------------//
+	//--------------------------------------------------------//
+	//             FRAMEBUFFER (BLOOM BRIGHT PASS)            //
+	//--------------------------------------------------------//
 
-	//----------------------------------------------------//
-	//             FRAMEBUFFER (POINT SHADOWS)            //
-	//----------------------------------------------------//
+	unsigned int FBO_brightPass, brightTexture;
+
+	glGenFramebuffers(1, &FBO_brightPass);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO_brightPass);
+
+	glGenTextures(1, &brightTexture);
+	glBindTexture(GL_TEXTURE_2D, brightTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA,
+				 GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+						   brightTexture, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Bright FBO not complete!" << std::endl;
+
+	//-----------------------------------------------------------//
+	//             FRAMEBUFFER (BLOOM PING-PONG BLUR)            //
+	//-----------------------------------------------------------//
+
+	unsigned int FBO_pingpong[2], pingpongBuffer[2];
+
+	glGenFramebuffers(2, FBO_pingpong);
+	glGenTextures(2, pingpongBuffer);
+
+	for (int i = 0; i < 2; i++) {
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO_pingpong[i]);
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0,
+					 GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+							   GL_TEXTURE_2D, pingpongBuffer[i], 0);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Pingpong FBO " << i << " not complete!" << std::endl;
+	}
 
 	//----------------------------------------//
 	//             UNIFORM BUFFERS            //
