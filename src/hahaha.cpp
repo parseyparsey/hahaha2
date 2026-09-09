@@ -989,7 +989,9 @@ int main() {
 			fpslastTime += 1.0;
 		}
 
-		static int lastWidth = 0, lastHeight = 0;
+		static int lastWidth = 0, lastHeight = 0, lastMsaa = -1;
+		static double lastResizeTime = 0.0;
+		const double RESIZE_DEBOUNCE = 0.15;
 
 		int wheight, wwidth;
 		glfwGetWindowSize(window, &wwidth, &wheight);
@@ -1008,7 +1010,9 @@ int main() {
 
 		//plightPos[0].z = static_cast<float>(sin(glfwGetTime() * 0.5) * 3.0);
 
-		if (wwidth != lastWidth || wheight != lastHeight) 
+		if ((wwidth != lastWidth || wheight != lastHeight ||
+			 msaa_current != lastMsaa) &&
+			(glfwGetTime() - lastResizeTime > RESIZE_DEBOUNCE)) 
 		{
 			glBindTexture(GL_TEXTURE_2D, colorbuffer);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
@@ -1020,16 +1024,18 @@ int main() {
 								  wheight);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-			glBindTexture(GL_TEXTURE_2D, colorbuffer_MSAA);
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaa_current,
-									GL_RGBA16F, wwidth, wheight, GL_TRUE);
-			glBindTexture(GL_TEXTURE_2D, 0);
+			if (msaa_current > 0) {
+				glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, colorbuffer_MSAA);
+				glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaa_current,
+										GL_RGBA16F, wwidth, wheight, GL_TRUE);
+				glBindTexture(GL_TEXTURE_2D, 0);
 
-			glBindRenderbuffer(GL_RENDERBUFFER, RBO_MSAA);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa_current,
-											 GL_DEPTH24_STENCIL8, wwidth,
-											 wheight);
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+				glBindRenderbuffer(GL_RENDERBUFFER, RBO_MSAA);
+				glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaa_current,
+												 GL_DEPTH24_STENCIL8, wwidth,
+												 wheight);
+				glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			}
 
 			glBindTexture(GL_TEXTURE_2D, brightTexture);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
@@ -1045,6 +1051,8 @@ int main() {
 
 			lastWidth = wwidth;
 			lastHeight = wheight;
+			lastMsaa = msaa_current;
+			lastResizeTime = glfwGetTime();
 		}
 
 		float currentFrame = glfwGetTime();
