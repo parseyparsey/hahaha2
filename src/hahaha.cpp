@@ -1343,7 +1343,7 @@ int main() {
 			lightshaderobj.setVec3f("spotlight.diffuse",  0.0f, 0.0f, 0.0f);
 			lightshaderobj.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
 		}
-
+		
 		glBindVertexArray(0);
 		glBindVertexArray(VAO1);
 		glDrawArrays(GL_TRIANGLES, 0, 36);

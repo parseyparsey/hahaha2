@@ -130,6 +130,10 @@ vec4 Kernel(int mode){
     vec3 col = vec3(0.0);
     for (int i = 0; i < 9; i++){
         vec3 fragsample = texture(ourTexture, TexCoords + offsets[i]).rgb;
+
+        if (bloom)
+            fragsample += texture(bloomTex, TexCoords + offsets[i]).rgb;
+
         if (hdr)
             fragsample = toneMapping(fragsample);
         col += fragsample * kernel[i];
@@ -149,6 +153,8 @@ vec4 BlurredGreyscale(){
 
 vec4 Halfcolor(){
     vec3 color = texture(ourTexture, TexCoords).rgb;
+    if (bloom)
+        color += texture(bloomTex, TexCoords).rgb;
     vec4 fragColor;
     if (gl_FragCoord.x < width / 2.0){
         fragColor = Grayscale(vec4((hdr?toneMapping(color):color), 1.0));//BlurredGreyscale();
