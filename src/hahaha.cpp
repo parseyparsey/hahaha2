@@ -1604,11 +1604,11 @@ int main() {
 		glBindVertexArray(VAO4); 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		//Bloom Blur Pass
+		//Bloom Blur Pass 
 		bool horizontal = true, first_iteration = true;
 		int bloomAmount = 10;
 		bloomBlurShader.use();
-
+		
 		for (unsigned int i = 0; i < bloomAmount; i++)
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, FBO_pingpong[horizontal]);

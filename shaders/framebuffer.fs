@@ -53,6 +53,8 @@ void main()
         //mappedfin = vec4(toneMapping(texture(ourTexture, TexCoords).rgb), 1.0);
     } else if (fbmode < 3){
         mappedfin = texture(ourTexture, TexCoords);
+        if(bloom)
+            mappedfin += texture(bloomTex, TexCoords);
     }
 
     switch(fbmode){
