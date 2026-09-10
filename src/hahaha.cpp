@@ -52,7 +52,8 @@ unsigned int VAO, VAO1, VAO2, VAO3, VAO4, VAO5;
 unsigned int VBO, VBO1, VBO2, VBO3, VBO4, VBO5;
 unsigned int FBO, RBO, colorbuffer;
 unsigned int FBO_MSAA, colorbuffer_MSAA, RBO_MSAA;
-unsigned int FBO_depth, FBO_pshadow;
+unsigned int FBO_depth, FBO_pshadow, gBuffer;
+unsigned int gPosition, gNormal, gAlbedoSpec, gRboDepth;
 unsigned int depthMap;
 unsigned int depthCubemap;
 unsigned int UBO;
@@ -875,6 +876,59 @@ int main() {
 			std::cout << "Pingpong FBO " << i << " not complete!" << std::endl;
 	}
 
+	//----------------------------------------------//
+	//             FRAMEBUFFER (gBUFFER)            //
+	//----------------------------------------------//
+
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0,
+				 GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+						   gPosition, 0);
+
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_FLOAT,
+				 NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
+						   gNormal, 0);
+
+	glGenTextures(1, &gAlbedoSpec);
+	glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_FLOAT,
+				 NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D,
+						   gAlbedoSpec, 0);
+
+	unsigned int gAttachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
+								   GL_COLOR_ATTACHMENT2};
+
+	glDrawBuffers(3, gAttachments);
+
+	glGenRenderbuffers(1, &gRboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, gRboDepth);
+
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 800, 600);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+							  GL_RENDERBUFFER, gRboDepth);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "gBuffer not complete!" << std::endl;
+	else
+		std::cout << "gBuffer::OK!\n";
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	//----------------------------------------//
 	//             UNIFORM BUFFERS            //
 	//----------------------------------------//
@@ -1048,6 +1102,26 @@ int main() {
 							 GL_RGBA, GL_FLOAT, NULL);
 				glBindTexture(GL_TEXTURE_2D, 0);
 			}
+
+			glBindTexture(GL_TEXTURE_2D, gPosition);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+						 GL_RGBA, GL_FLOAT, NULL);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glBindTexture(GL_TEXTURE_2D, gNormal);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+						 GL_RGBA, GL_FLOAT, NULL);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+						 GL_RGBA, GL_FLOAT, NULL);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glBindRenderbuffer(GL_RENDERBUFFER, gRboDepth);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, wwidth,
+								  wheight);
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 			lastWidth = wwidth;
 			lastHeight = wheight;
