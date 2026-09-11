@@ -920,8 +920,8 @@ int main() {
 	glGenRenderbuffers(1, &gRboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, gRboDepth);
 
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 800, 600);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
 							  GL_RENDERBUFFER, gRboDepth);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -1124,7 +1124,7 @@ int main() {
 			glBindTexture(GL_TEXTURE_2D, 0);
 
 			glBindRenderbuffer(GL_RENDERBUFFER, gRboDepth);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, wwidth,
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, wwidth,
 								  wheight);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -1183,6 +1183,130 @@ int main() {
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+
+		gPass.use();
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, container2txt.ID);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, container2txt_specular.ID);
+
+		glBindVertexArray(0);
+		glBindVertexArray(VAO1);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		int cubenum = sizeof(cubePositions) / sizeof(cubePositions[0]);
+
+		for (unsigned int i = 0; i < cubenum; i++) {
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, (cubePositions[i]));
+			float angle = 20.0f * i;
+			if (i % 3 == 0) {
+				angle = glfwGetTime() * 90.0f;
+			}
+			model = glm::rotate(
+				model, glm::radians(/*(float)sin(glfwGetTime()) * 180*/ angle),
+				glm::vec3(1.0f, 0.3f, 0.5f));
+			lightshaderobj.setMat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		// nmap_object
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -4.0f));
+		model = glm::rotate(model, glm::radians(60.0f),
+							glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(10.0f),
+							glm::vec3(1.0f, 0.0f, 0.0f));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bricktxt.ID);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, whitetxt.ID);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, bricktxtnorm.ID);
+		lightshaderobj.setMat4("model", model);
+		if (debug_normalmapping)
+			lightshaderobj.setBool("useNormalMap", true);
+		renderQuad();
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(3.0f, 1.0f, -6.0f));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bricks2.ID);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, bricks2_normal.ID);
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_2D, bricks2_disp.ID);
+		lightshaderobj.setMat4("model", model);
+		if (debug_parallaxmapping)
+			lightshaderobj.setBool("useParallaxMap", true);
+		renderQuad();
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(5.0f, 1.0f, -8.0f));
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+		model = glm::rotate(model, glm::radians(45.0f),
+							glm::vec3(0.0f, -1.0f, 0.0f));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, toybox_diff.ID);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, toybox_norm.ID);
+		glActiveTexture(GL_TEXTURE8);
+		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
+		glActiveTexture(GL_TEXTURE9);
+		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		lightshaderobj.setMat4("model", model);
+		if (debug_parallaxmapping)
+			lightshaderobj.setBool("useParallaxMap", true);
+		renderQuad();
+		lightshaderobj.setFloat("height_scale", 0.1f);
+
+		lightshaderobj.setBool("useNormalMap", false);
+		lightshaderobj.setBool("useParallaxMap", false);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 73.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+		model = glm::rotate(model, glm::radians((float)glfwGetTime() * 96.0f),
+							glm::vec3(0.3f, 0.7f, 0.0f));
+		lightshaderobj.setMat4("model", model);
+		planet.Draw(lightshaderobj);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-6.0f, 1.0f, -6.0f));
+		model = glm::rotate(model, glm::radians(60.0f),
+							glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
+		lightshaderobj.setMat4("model", model);
+		backpack.Draw(lightshaderobj);
+
+		model = glm::translate(model, glm::vec3(-7.0f, 1.0f, -9.0f));
+		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
+		lightshaderobj.setMat4("model", model);
+		// oillamp.Draw(lightshaderobj);
+
+		model = glm::translate(model, glm::vec3(-30.0f, -11.7f, -30.0f));
+		lightshaderobj.setMat4("model", model);
+		lightshaderobj.setFloat("material.shininess", 128.0f);
+		plane00.draw(lightshaderobj);
+
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+		glBindVertexArray(VAO1);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, naonao.ID);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f));
+		lightshaderobj.setMat4("model", model);
+		audio.updateSoundPos("aud00", extractPosition(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////
 		//DIR SHADOW DEPTH CALCULATION
@@ -1331,10 +1455,7 @@ int main() {
 
 		
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, container2txt.ID);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, container2txt_specular.ID);
+		
 
 		lightshaderobj.use();
 		lightshaderobj.setFloat("far_plane", far_plane);
@@ -1439,118 +1560,7 @@ int main() {
 			lightshaderobj.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
 		}
 		
-		glBindVertexArray(0);
-		glBindVertexArray(VAO1);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		int cubenum = sizeof(cubePositions) / sizeof(cubePositions[0]);
-
-		for (unsigned int i = 0; i < cubenum; i++) {
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, (cubePositions[i]));
-			float angle = 20.0f * i;
-			if (i % 3 == 0){
-				angle = glfwGetTime() * 90.0f;
-			}
-			model = glm::rotate(model, glm::radians(/*(float)sin(glfwGetTime()) * 180*/angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			lightshaderobj.setMat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-
-		//nmap_object
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-2.0f, 1.0f, -4.0f));
-		model = glm::rotate(model, glm::radians(60.0f),
-							glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(10.0f),
-							glm::vec3(1.0f, 0.0f, 0.0f));
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, bricktxt.ID);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, whitetxt.ID);
-		glActiveTexture(GL_TEXTURE7);
-		glBindTexture(GL_TEXTURE_2D, bricktxtnorm.ID);
-		lightshaderobj.setMat4("model", model);
-		if (debug_normalmapping)
-			lightshaderobj.setBool("useNormalMap", true);
-		renderQuad();
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(3.0f, 1.0f, -6.0f));
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, bricks2.ID);
-		glActiveTexture(GL_TEXTURE7);
-		glBindTexture(GL_TEXTURE_2D, bricks2_normal.ID);
-		glActiveTexture(GL_TEXTURE8);
-		glBindTexture(GL_TEXTURE_2D, bricks2_disp.ID);
-		lightshaderobj.setMat4("model", model);
-		if (debug_parallaxmapping)
-			lightshaderobj.setBool("useParallaxMap", true);
-		renderQuad();
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(5.0f, 1.0f, -8.0f));
-		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-		model = glm::rotate(model, glm::radians(45.0f),
-							glm::vec3(0.0f, -1.0f, 0.0f));
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, toybox_diff.ID);
-		glActiveTexture(GL_TEXTURE7);
-		glBindTexture(GL_TEXTURE_2D, toybox_norm.ID);
-		glActiveTexture(GL_TEXTURE8);
-		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
-		glActiveTexture(GL_TEXTURE9);
-		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		lightshaderobj.setMat4("model", model);
-		if (debug_parallaxmapping)
-			lightshaderobj.setBool("useParallaxMap", true);
-		renderQuad();
-		lightshaderobj.setFloat("height_scale", 0.1f);
-
-		lightshaderobj.setBool("useNormalMap", false);
-		lightshaderobj.setBool("useParallaxMap", false);
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 73.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-		model = glm::rotate(model, glm::radians((float)glfwGetTime() * 96.0f), glm::vec3(0.3f, 0.7f, 0.0f));
-		lightshaderobj.setMat4("model", model);
-		planet.Draw(lightshaderobj);
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-6.0f, 1.0f, -6.0f));
-		model = glm::rotate(model, glm::radians(60.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
-		lightshaderobj.setMat4("model", model);
-		backpack.Draw(lightshaderobj);
-
-		model = glm::translate(model, glm::vec3(-7.0f, 1.0f, -9.0f));
-		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
-		lightshaderobj.setMat4("model", model);
-		//oillamp.Draw(lightshaderobj);
-
-		model = glm::translate(model, glm::vec3(-30.0f, -11.7f, -30.0f));
-		lightshaderobj.setMat4("model", model);
-		lightshaderobj.setFloat("material.shininess", 128.0f);
-		plane00.draw(lightshaderobj);
-
-		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
-		glBindVertexArray(VAO1);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, naonao.ID);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f));
-		lightshaderobj.setMat4("model", model);
-		audio.updateSoundPos("aud00", extractPosition(model));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
+		
 		//glDisable(GL_DEPTH_TEST);
 		singlecolor.use();
 		model = glm::scale(model, glm::vec3(1.05f, 1.05f, 1.05f));
