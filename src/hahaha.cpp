@@ -472,8 +472,8 @@ static int theme_current = 2;
 static int filter_current = 0;
 static int shadow_current = 1;
 static int pshadow_current = 0;
-static int msaa_list = 2;
-static int msaa_current = 4;
+static int msaa_list = 0;
+static int msaa_current = 0;
 const char* themes[] = { "Classic", "Dark", "Light" };
 const char *shadow_res[] = {"1028", "2048", "4096"};
 const char *pshadow_res[] = {"1028", "2048", "4096"};
@@ -945,9 +945,12 @@ int main() {
 	unsigned int env_index = glGetUniformBlockIndex(envmapping.ID, "matrices");
 	unsigned int lobj_index = glGetUniformBlockIndex(lightshaderobj.ID, "matrices");
 	unsigned int lobji_index = glGetUniformBlockIndex(lightshaderobj_instanced.ID, "matrices");
+	unsigned int geopass_index =
+		glGetUniformBlockIndex(gPass.ID, "matrices");
 	glUniformBlockBinding(envmapping.ID, env_index, 0);
 	glUniformBlockBinding(lightshaderobj.ID, lobj_index, 0);
 	glUniformBlockBinding(lightshaderobj_instanced.ID, lobji_index, 0);
+	glUniformBlockBinding(gPass.ID, geopass_index, 0);
 
 	//-----------------------------------//
 	//           VAO6 (ASTROIDS)         //
@@ -1155,16 +1158,37 @@ int main() {
 		view = glm::lookAt(camPos, camPos + camFront, camUp);
 		projection = glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
 
-		//////////////////////////////////////////////////////////////////////////////////////////////
-		//DIR SHADOW DEPTH CALCULATION
-		//////////////////////////////////////////////////////////////////////////////////////////////
-
 		float near_plane = 1.0f, far_plane = 200.0f;//7.5f;
 		glm::mat4 lightProjection = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
 		glm::vec3 lightDir = glm::normalize(glm::vec3(0.01f, -1.0f, 0.0f));
 		glm::mat4 lightView = glm::lookAt(-lightDir * 20.0f, glm::vec3(0.0f),
 				glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+		glBindBuffer(GL_UNIFORM_BUFFER, UBO);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4),
+						glm::value_ptr(view));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4),
+						glm::value_ptr(projection));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		//////////////////////////////////////////////////////////////////////////////////////////////
+		// GEOMETRY PASS
+		//////////////////////////////////////////////////////////////////////////////////////////////
+
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//////////////////////////////////////////////////////////////////////////////////////////////
+		//DIR SHADOW DEPTH CALCULATION
+		//////////////////////////////////////////////////////////////////////////////////////////////
+
 
 		depthshader.use();
 		depthshader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
@@ -1307,10 +1331,7 @@ int main() {
 		if (isWireframeOn)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		glBindBuffer(GL_UNIFORM_BUFFER, UBO);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(projection));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, container2txt.ID);
