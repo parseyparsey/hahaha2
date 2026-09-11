@@ -1674,7 +1674,7 @@ int main() {
 		bloomBrightPass.setInt("resolvedFrame", 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, colorbuffer);
-		bloomBrightPass.setFloat("threshold", 1.0f);
+		bloomBrightPass.setFloat("threshold", 1.5f);
 		glBindVertexArray(VAO4); 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
