@@ -411,6 +411,8 @@ Shader depthquad("shaders/depth_quad.vs", "shaders/depth_quad.fs");
 Shader pshadow_depth("shaders/pshadow_depth.vs", "shaders/pshadow_depth.fs", "shaders/pshadow_depth.gs");
 Shader bloomBrightPass("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs");
 Shader bloomBlurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs");
+Shader gPass("shaders/gbuffer.vs", "shaders/gbuffer.fs");
+Shader lightingPass("shaders/lightingpass.vs", "shaders/lightingpass.fs"); 
 
 //----------------------------------------------//
 //            SETTING UP TEXTURES               //
