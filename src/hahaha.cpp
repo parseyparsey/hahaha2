@@ -1172,8 +1172,6 @@ int main() {
 						glm::value_ptr(projection));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1184,12 +1182,12 @@ int main() {
 
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////
 		//DIR SHADOW DEPTH CALCULATION
 		//////////////////////////////////////////////////////////////////////////////////////////////
-
-
+		
 		depthshader.use();
 		depthshader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
 
