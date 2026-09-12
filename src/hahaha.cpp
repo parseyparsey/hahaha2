@@ -413,6 +413,7 @@ Shader bloomBrightPass("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs");
 Shader bloomBlurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs");
 Shader gPass("shaders/gbuffer.vs", "shaders/gbuffer.fs");
 Shader lightingPass("shaders/lightingpass.vs", "shaders/lightingpass.fs"); 
+Shader lightingpassdebug("shaders/lightingpass.vs", "shaders/lightingpassdebug.fs"); 
 
 //----------------------------------------------//
 //            SETTING UP TEXTURES               //
@@ -516,6 +517,10 @@ int main() {
 	lightshaderobj.use();
 	lightshaderobj.setInt("material.texture_diffuse", 0);
 	lightshaderobj.setInt("material.texture_specular", 1);
+
+	gPass.use();
+	gPass.setInt("material.texture_diffuse", 0);
+	gPass.setInt("material.texture_specular", 1);
 
     //---------------------------------------------//
     //           BUFFERS SETUP & VAO1              //
@@ -947,6 +952,8 @@ int main() {
 	unsigned int lobji_index = glGetUniformBlockIndex(lightshaderobj_instanced.ID, "matrices");
 	unsigned int geopass_index =
 		glGetUniformBlockIndex(gPass.ID, "matrices");
+	std::cout << "geopass_index: " << geopass_index
+			  << " (invalid = " << GL_INVALID_INDEX << ")" << std::endl;
 	glUniformBlockBinding(envmapping.ID, env_index, 0);
 	glUniformBlockBinding(lightshaderobj.ID, lobj_index, 0);
 	glUniformBlockBinding(lightshaderobj_instanced.ID, lobji_index, 0);
@@ -1181,19 +1188,68 @@ int main() {
 		//////////////////////////////////////////////////////////////////////////////////////////////
 
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, wwidth, wheight);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glEnable(GL_DEPTH_TEST);
+
 		glEnable(GL_DEPTH_TEST);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+				GL_STENCIL_BUFFER_BIT);
+		//testnow
+		//glStencilMask(0x00);
+
+		glDepthFunc(GL_ALWAYS);
 
 		gPass.use();
+
+		gPass.setVec3("viewPos", camPos);
+
+		gPass.setInt("material.texture_diffuse", 0);
+		gPass.setInt("material.texture_specular", 1);
+		gPass.setInt("normalMap", 7);
+		gPass.setInt("parallaxDepthMap", 8);
+		gPass.setBool("useNormalMap", false);
+		gPass.setBool("useParallaxMap", false);
+		gPass.setFloat("height_scale", 0.1f);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		if (isWireframeOn)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, container2txt.ID);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, container2txt_specular.ID);
+		 
+		/* GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+		GLint cullMode, frontFace;
+		glGetIntegerv(GL_CULL_FACE_MODE, &cullMode);
+		glGetIntegerv(GL_FRONT_FACE, &frontFace);
+		std::cout << "Cull enabled: " << (int)cullEnabled
+				  << ", mode: " << cullMode << ", front face: " << frontFace
+				  << std::endl;
+
+		GLboolean scissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+		GLint scissorBox[4];
+		glGetIntegerv(GL_SCISSOR_BOX, scissorBox);
+		std::cout << "Scissor enabled: " << (int)scissorEnabled
+				  << ", box: " << scissorBox[0] << "," << scissorBox[1] << ","
+				  << scissorBox[2] << "," << scissorBox[3] << std::endl;
+
+		GLboolean colorMask[4];
+		glGetBooleanv(GL_COLOR_WRITEMASK, colorMask);
+		std::cout << "Color writemask: " << (int)colorMask[0] << ","
+				  << (int)colorMask[1] << "," << (int)colorMask[2] << ","
+				  << (int)colorMask[3] << std::endl;
+
+		GLboolean rasterDiscard = glIsEnabled(GL_RASTERIZER_DISCARD);
+		std::cout << "Rasterizer discard: " << (int)rasterDiscard << std::endl;*/
 
 		glBindVertexArray(0);
 		glBindVertexArray(VAO1);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		int cubenum = sizeof(cubePositions) / sizeof(cubePositions[0]);
 
@@ -1207,7 +1263,7 @@ int main() {
 			model = glm::rotate(
 				model, glm::radians(/*(float)sin(glfwGetTime()) * 180*/ angle),
 				glm::vec3(1.0f, 0.3f, 0.5f));
-			lightshaderobj.setMat4("model", model);
+			gPass.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
@@ -1224,9 +1280,9 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, whitetxt.ID);
 		glActiveTexture(GL_TEXTURE7);
 		glBindTexture(GL_TEXTURE_2D, bricktxtnorm.ID);
-		lightshaderobj.setMat4("model", model);
+		gPass.setMat4("model", model);
 		if (debug_normalmapping)
-			lightshaderobj.setBool("useNormalMap", true);
+			gPass.setBool("useNormalMap", true);
 		renderQuad();
 
 		model = glm::mat4(1.0f);
@@ -1237,9 +1293,9 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, bricks2_normal.ID);
 		glActiveTexture(GL_TEXTURE8);
 		glBindTexture(GL_TEXTURE_2D, bricks2_disp.ID);
-		lightshaderobj.setMat4("model", model);
+		gPass.setMat4("model", model);
 		if (debug_parallaxmapping)
-			lightshaderobj.setBool("useParallaxMap", true);
+			gPass.setBool("useParallaxMap", true);
 		renderQuad();
 
 		model = glm::mat4(1.0f);
@@ -1256,41 +1312,42 @@ int main() {
 		glActiveTexture(GL_TEXTURE9);
 		glBindTexture(GL_TEXTURE_2D, toybox_disp.ID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		lightshaderobj.setMat4("model", model);
+		gPass.setMat4("model", model);
 		if (debug_parallaxmapping)
-			lightshaderobj.setBool("useParallaxMap", true);
+			gPass.setBool("useParallaxMap", true);
 		renderQuad();
-		lightshaderobj.setFloat("height_scale", 0.1f);
+		
 
-		lightshaderobj.setBool("useNormalMap", false);
-		lightshaderobj.setBool("useParallaxMap", false);
+		gPass.setBool("useNormalMap", false);
+		gPass.setBool("useParallaxMap", false);
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 73.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
 		model = glm::rotate(model, glm::radians((float)glfwGetTime() * 96.0f),
 							glm::vec3(0.3f, 0.7f, 0.0f));
-		lightshaderobj.setMat4("model", model);
-		planet.Draw(lightshaderobj);
+		gPass.setMat4("model", model);
+		planet.Draw(gPass);
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-6.0f, 1.0f, -6.0f));
 		model = glm::rotate(model, glm::radians(60.0f),
 							glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
-		lightshaderobj.setMat4("model", model);
-		backpack.Draw(lightshaderobj);
+		gPass.setMat4("model", model);
+		backpack.Draw(gPass);
 
 		model = glm::translate(model, glm::vec3(-7.0f, 1.0f, -9.0f));
 		model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
-		lightshaderobj.setMat4("model", model);
+		gPass.setMat4("model", model);
 		// oillamp.Draw(lightshaderobj);
 
 		model = glm::translate(model, glm::vec3(-30.0f, -11.7f, -30.0f));
-		lightshaderobj.setMat4("model", model);
-		lightshaderobj.setFloat("material.shininess", 128.0f);
-		plane00.draw(lightshaderobj);
-
+		gPass.setMat4("model", model);
+		gPass.setFloat("material.shininess", 128.0f);
+		plane00.draw(gPass);
+		//testnow
+		/*
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilFunc(GL_ALWAYS, 1, 0xFF);
 		glStencilMask(0xFF);
@@ -1301,12 +1358,15 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -10.0f));
-		lightshaderobj.setMat4("model", model);
+		gPass.setMat4("model", model);
 		audio.updateSoundPos("aud00", extractPosition(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
+		*/
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////
 		//DIR SHADOW DEPTH CALCULATION
@@ -1435,7 +1495,8 @@ int main() {
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////
-
+		// LIGHTING PASS
+		//////////////////////////////////////////////////////////////////////////////////////////////
 
 		//For rendering commands
 		if (msaa_current != 0)
@@ -1443,125 +1504,133 @@ int main() {
 		else
 			glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-		glEnable(GL_DEPTH_TEST);
-		glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glStencilMask(0x00);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
 
-		if (isWireframeOn)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		
-
-		
-
-		lightshaderobj.use();
-		lightshaderobj.setFloat("far_plane", far_plane);
+		lightingPass.use();
+		lightingPass.setFloat("far_plane", far_plane);
 
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-		lightshaderobj.setInt("pDepthMap" , 5); // fix
+		lightingPass.setInt("pDepthMap", 5);
 
-		lightshaderobj.setBool("blinn", isBlinn);
-		lightshaderobj.setMat4("model", model);
-		lightshaderobj.setVec3("viewPos", camPos);
-		lightshaderobj.setFloat("material.shininess", 32.0f);
-		lightshaderobj.setFloat("time", sin(glfwGetTime()) * 4.0f);
-		lightshaderobj.setMat4("LightSpaceMatrix", lightSpaceMatrix);
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		lightingPass.setInt("gPosition", 10);
+
+		glActiveTexture(GL_TEXTURE11);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		lightingPass.setInt("gNormal", 11);
+
+		glActiveTexture(GL_TEXTURE12);
+		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+		lightingPass.setInt("gAlbedoSpec", 12);
+
+		lightingPass.setBool("blinn", isBlinn);
+		lightingPass.setMat4("model", model);
+		lightingPass.setVec3("viewPos", camPos);
+		lightingPass.setFloat("shininess", 32.0f);
+		lightingPass.setFloat("time", sin(glfwGetTime()) * 4.0f);
+		lightingPass.setMat4("LightSpaceMatrix", lightSpaceMatrix);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, depthMap);
-		lightshaderobj.setInt("shadowMap", 4);
-		lightshaderobj.setInt("normalMap", 7);
-		lightshaderobj.setBool("useNormalMap", false);
-		lightshaderobj.setBool("useParallaxMap", false);
-		lightshaderobj.setInt("parallaxDepthMap", 8);
-		lightshaderobj.setInt("debug_parallaxDepthMap", 9);
-		lightshaderobj.setFloat("height_scale", 0.1f);
+		lightingPass.setInt("shadowMap", 4);
 
-		lightshaderobj.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
-		lightshaderobj.setVec3f("dirlight.ambient",  0.00f, 0.00f, 0.00f);//*/0.01f, 0.01f, 0.01f); //0.01
-		lightshaderobj.setVec3f("dirlight.diffuse",  0.2f, 0.2f, 0.2f); // .2
-		lightshaderobj.setVec3f("dirlight.specular", 0.0f, 0.0f, 0.0f);
+		lightingPass.setVec3f("dirlight.direction", 0.01f, -1.0f, 0.0f);
+		lightingPass.setVec3f("dirlight.ambient",  0.00f, 0.00f, 0.00f);//*/0.01f, 0.01f, 0.01f); //0.01
+		lightingPass.setVec3f("dirlight.diffuse",  0.2f, 0.2f, 0.2f); // .2
+		lightingPass.setVec3f("dirlight.specular", 0.0f, 0.0f, 0.0f);
 
-		lightshaderobj.setFloat("pLight[0].constant", 1.0f);
-		lightshaderobj.setFloat("pLight[0].linear", 0.09f);
-		lightshaderobj.setFloat("pLight[0].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[0].ambient", 0.05f, 0.05f, 0.05f); // default 0.05
-		lightshaderobj.setVec3f("pLight[0].diffuse", 0.6f, 0.6f, 0.6f);
-		lightshaderobj.setVec3f("pLight[0].specular", 0.3f, 0.3f, 0.3f);
-		lightshaderobj.setVec3("pLight[0].position", plightPos[0]);
+		lightingPass.setFloat("pLight[0].constant", 1.0f);
+		lightingPass.setFloat("pLight[0].linear", 0.09f);
+		lightingPass.setFloat("pLight[0].quadratic", 0.032f);
+		lightingPass.setVec3f("pLight[0].ambient", 0.05f, 0.05f, 0.05f); // default 0.05
+		lightingPass.setVec3f("pLight[0].diffuse", 0.6f, 0.6f, 0.6f);
+		lightingPass.setVec3f("pLight[0].specular", 0.3f, 0.3f, 0.3f);
+		lightingPass.setVec3("pLight[0].position", plightPos[0]);
 
-		lightshaderobj.setFloat("pLight[1].constant", 1.0f);
-		lightshaderobj.setFloat("pLight[1].linear", 0.09f);
-		lightshaderobj.setFloat("pLight[1].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[1].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[1].diffuse", 0.8f, 0.8f, 0.8f);
-		lightshaderobj.setVec3f("pLight[1].specular", 0.3f, 0.3f, 0.3f);
-		lightshaderobj.setVec3("pLight[1].position", plightPos[1]);
+		lightingPass.setFloat("pLight[1].constant", 1.0f);
+		lightingPass.setFloat("pLight[1].linear", 0.09f);
+		lightingPass.setFloat("pLight[1].quadratic", 0.032f);
+		lightingPass.setVec3f("pLight[1].ambient", 0.05f, 0.05f, 0.05f);
+		lightingPass.setVec3f("pLight[1].diffuse", 0.8f, 0.8f, 0.8f);
+		lightingPass.setVec3f("pLight[1].specular", 0.3f, 0.3f, 0.3f);
+		lightingPass.setVec3("pLight[1].position", plightPos[1]);
 
-		lightshaderobj.setFloat("pLight[2].constant", 1.0f);
-		lightshaderobj.setFloat("pLight[2].linear", 0.09f);
-		lightshaderobj.setFloat("pLight[2].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[2].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[2].diffuse", 0.4f, 0.0f, 1.0f);
-		lightshaderobj.setVec3f("pLight[2].specular", 0.4f, 0.0f, 1.0f);
-		lightshaderobj.setVec3("pLight[2].position", plightPos[2]);
+		lightingPass.setFloat("pLight[2].constant", 1.0f);
+		lightingPass.setFloat("pLight[2].linear", 0.09f);
+		lightingPass.setFloat("pLight[2].quadratic", 0.032f);
+		lightingPass.setVec3f("pLight[2].ambient", 0.05f, 0.05f, 0.05f);
+		lightingPass.setVec3f("pLight[2].diffuse", 0.4f, 0.0f, 1.0f);
+		lightingPass.setVec3f("pLight[2].specular", 0.4f, 0.0f, 1.0f);
+		lightingPass.setVec3("pLight[2].position", plightPos[2]);
 
-		lightshaderobj.setFloat("pLight[3].constant", 1.0f);
-		lightshaderobj.setFloat("pLight[3].linear", 0.09f);
-		lightshaderobj.setFloat("pLight[3].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[3].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[3].diffuse", 0.5f, 0.0f, 0.0f);
-		lightshaderobj.setVec3f("pLight[3].specular", 0.6f, 0.6f, 0.6f);
-		lightshaderobj.setVec3("pLight[3].position", plightPos[3]);
+		lightingPass.setFloat("pLight[3].constant", 1.0f);
+		lightingPass.setFloat("pLight[3].linear", 0.09f);
+		lightingPass.setFloat("pLight[3].quadratic", 0.032f);
+		lightingPass.setVec3f("pLight[3].ambient", 0.05f, 0.05f, 0.05f);
+		lightingPass.setVec3f("pLight[3].diffuse", 0.5f, 0.0f, 0.0f);
+		lightingPass.setVec3f("pLight[3].specular", 0.6f, 0.6f, 0.6f);
+		lightingPass.setVec3("pLight[3].position", plightPos[3]);
 
-		lightshaderobj.setFloat("pLight[4].constant", 1.0f);
-		lightshaderobj.setFloat("pLight[4].linear", 0.09f);
-		lightshaderobj.setFloat("pLight[4].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[4].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[4].diffuse", 0.5f, 0.5f, 0.5f);
-		lightshaderobj.setVec3f("pLight[4].specular", 0.6f, 0.6f, 0.6f);
-		lightshaderobj.setVec3("pLight[4].position", plightPos[4]);
+		lightingPass.setFloat("pLight[4].constant", 1.0f);
+		lightingPass.setFloat("pLight[4].linear", 0.09f);
+		lightingPass.setFloat("pLight[4].quadratic", 0.032f);
+		lightingPass.setVec3f("pLight[4].ambient", 0.05f, 0.05f, 0.05f);
+		lightingPass.setVec3f("pLight[4].diffuse", 0.5f, 0.5f, 0.5f);
+		lightingPass.setVec3f("pLight[4].specular", 0.6f, 0.6f, 0.6f);
+		lightingPass.setVec3("pLight[4].position", plightPos[4]);
 
-		lightshaderobj.setFloat("pLight[5].constant", 1.0f);
-		lightshaderobj.setFloat("pLight[5].linear", 0.09f);
-		lightshaderobj.setFloat("pLight[5].quadratic", 0.032f);
-		lightshaderobj.setVec3f("pLight[5].ambient", 0.05f, 0.05f, 0.05f);
-		lightshaderobj.setVec3f("pLight[5].diffuse", 0.5f, 0.5f, 0.5f);
-		lightshaderobj.setVec3f("pLight[5].specular", 0.6f, 0.6f, 0.6f);
-		lightshaderobj.setVec3("pLight[5].position", plightPos[5]);
+		lightingPass.setFloat("pLight[5].constant", 1.0f);
+		lightingPass.setFloat("pLight[5].linear", 0.09f);
+		lightingPass.setFloat("pLight[5].quadratic", 0.032f);
+		lightingPass.setVec3f("pLight[5].ambient", 0.05f, 0.05f, 0.05f);
+		lightingPass.setVec3f("pLight[5].diffuse", 0.5f, 0.5f, 0.5f);
+		lightingPass.setVec3f("pLight[5].specular", 0.6f, 0.6f, 0.6f);
+		lightingPass.setVec3("pLight[5].position", plightPos[5]);
 
-		lightshaderobj.setFloat("spotlight.constant", 1.0f);
-		lightshaderobj.setFloat("spotlight.linear", 0.45f);
-		lightshaderobj.setFloat("spotlight.quadratic", 0.0075f);
-		lightshaderobj.setVec3f("spotlight.ambient", 0.0f, 0.0f, 0.0f);
-		lightshaderobj.setVec3f("spotlight.diffuse", 0.0f, 0.0f, 0.0f);
-		lightshaderobj.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
-		lightshaderobj.setVec3("spotlight.position", camPos);
-		lightshaderobj.setVec3("spotlight.direction", camFront);
-		lightshaderobj.setFloat("spotlight.cutoff", glm::cos(glm::radians(12.5f)));
-		lightshaderobj.setFloat("spotlight.outercutoff", glm::cos(glm::radians(17.5f)));
+		lightingPass.setFloat("spotlight.constant", 1.0f);
+		lightingPass.setFloat("spotlight.linear", 0.45f);
+		lightingPass.setFloat("spotlight.quadratic", 0.0075f);
+		lightingPass.setVec3f("spotlight.ambient", 0.0f, 0.0f, 0.0f);
+		lightingPass.setVec3f("spotlight.diffuse", 0.0f, 0.0f, 0.0f);
+		lightingPass.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
+		lightingPass.setVec3("spotlight.position", camPos);
+		lightingPass.setVec3("spotlight.direction", camFront);
+		lightingPass.setFloat("spotlight.cutoff", glm::cos(glm::radians(12.5f)));
+		lightingPass.setFloat("spotlight.outercutoff", glm::cos(glm::radians(17.5f)));
 
 		if (flashlight_state == 1) {
-			lightshaderobj.setVec3f("spotlight.ambient",  0.2f, 0.2f, 0.2f);
-			lightshaderobj.setVec3f("spotlight.diffuse",  1.0f, 1.0f, 1.0f);
-			lightshaderobj.setVec3f("spotlight.specular", 1.0f, 1.0f, 1.0f);
+			lightingPass.setVec3f("spotlight.ambient",  0.2f, 0.2f, 0.2f);
+			lightingPass.setVec3f("spotlight.diffuse",  1.0f, 1.0f, 1.0f);
+			lightingPass.setVec3f("spotlight.specular", 1.0f, 1.0f, 1.0f);
 		}
 		else if (flashlight_state == 2) {
-			lightshaderobj.setVec3f("spotlight.ambient",  0.05f, 0.05f, 0.05f);
-			lightshaderobj.setVec3f("spotlight.diffuse",  0.4f, 0.4f, 0.4f);
-			lightshaderobj.setVec3f("spotlight.specular", 0.5f, 0.5f, 0.5f);
+			lightingPass.setVec3f("spotlight.ambient",  0.05f, 0.05f, 0.05f);
+			lightingPass.setVec3f("spotlight.diffuse",  0.4f, 0.4f, 0.4f);
+			lightingPass.setVec3f("spotlight.specular", 0.5f, 0.5f, 0.5f);
 		}
 		else if (flashlight_state == 0){
-			lightshaderobj.setVec3f("spotlight.ambient",  0.0f, 0.0f, 0.0f);
-			lightshaderobj.setVec3f("spotlight.diffuse",  0.0f, 0.0f, 0.0f);
-			lightshaderobj.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
+			lightingPass.setVec3f("spotlight.ambient",  0.0f, 0.0f, 0.0f);
+			lightingPass.setVec3f("spotlight.diffuse",  0.0f, 0.0f, 0.0f);
+			lightingPass.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
 		}
+
+		 lightingpassdebug.use();
+		lightingpassdebug.setInt("fboAttachment", 13);
+		glActiveTexture(GL_TEXTURE13);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+
 		
+		glBindVertexArray(VAO4);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		
+		//////////////////////////////////////////////////////////////////////
 		
 		//glDisable(GL_DEPTH_TEST);
+		/*
 		singlecolor.use();
 		model = glm::scale(model, glm::vec3(1.05f, 1.05f, 1.05f));
 		singlecolor.setMat4("view", view);
@@ -1592,6 +1661,8 @@ int main() {
 		audio.updateSoundPos("aud02", extractPosition(model));
 		glBindTexture(GL_TEXTURE_2D, majimatxt.ID);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		*/
+		//////////////////////////////////////////////////////////////////
 
 		/*lightshaderobj_instanced.use();
 		lightshaderobj_instanced.setInt("material.texture_diffuse", 0);
@@ -1607,8 +1678,10 @@ int main() {
 				GL_UNSIGNED_INT, 0, amount);
 			glBindVertexArray(0);
 		}*/
+		
 
-		glBindVertexArray(VAO2);
+		/////////////////////////////////////////////////////////
+		/* glBindVertexArray(VAO2);
 
 		int plightnum = sizeof(plightPos) / sizeof(plightPos[0]);
 
@@ -1688,15 +1761,17 @@ int main() {
 			model = glm::translate(model, it->second);
 			shader00.setMat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
-
+		}*/
+		//////////////////////////////////////////////////////////
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+		/*
 		if (msaa_current != 0) {
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_MSAA);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO);
 			glBlitFramebuffer(0, 0, wwidth, wheight, 0, 0, wwidth, wheight, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		}
+		*/
 
 		//Bloom Bright Pass
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO_brightPass);

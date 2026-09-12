@@ -22,7 +22,12 @@ uniform mat4 model;
 //uniform mat4 LightSpaceMatrix;
 
 void main(){
-    vs_out.fragPos = vec3(model * vec4(aPos, 1.0));  
+
+    gl_Position = vec4(aPos.x * 0.1, aPos.y * 0.1, 0.0, 1.0);
+    vs_out.fragPos = vec3(model * vec4(aPos, 1.0));
+    vs_out.TexCoords = aTexCoord;
+    vs_out.normal = mat3(transpose(inverse(model))) * aNormal;
+    /*vs_out.fragPos = vec3(model * vec4(aPos, 1.0));  
     vs_out.TexCoords = aTexCoord;
 
     vs_out.normal = mat3(transpose(inverse(model))) * aNormal;
@@ -38,5 +43,5 @@ void main(){
     vs_out.TBN = mat3(T, B, N);
     //nmap_end
     
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    gl_Position = projection * view * model * vec4(aPos, 1.0);*/
 }
