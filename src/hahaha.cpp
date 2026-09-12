@@ -1199,7 +1199,7 @@ int main() {
 		//testnow
 		//glStencilMask(0x00);
 
-		glDepthFunc(GL_LESS);
+		glDepthFunc(GL_ALWAYS);
 
 		gPass.use();
 
