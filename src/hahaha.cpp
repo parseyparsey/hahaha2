@@ -1199,7 +1199,7 @@ int main() {
 		//testnow
 		//glStencilMask(0x00);
 
-		glDepthFunc(GL_ALWAYS);
+		glDepthFunc(GL_LESS);
 
 		gPass.use();
 
@@ -1212,6 +1212,7 @@ int main() {
 		gPass.setBool("useNormalMap", false);
 		gPass.setBool("useParallaxMap", false);
 		gPass.setFloat("height_scale", 0.1f);
+
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
