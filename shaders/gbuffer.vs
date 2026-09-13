@@ -6,10 +6,9 @@ layout (location = 2) in vec2 aTexCoord;
 layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
 
-layout (std140) uniform matrices{
-    uniform mat4 view;
-    uniform mat4 projection;
-};
+
+uniform mat4 view;
+uniform mat4 projection;
 
 out VS_OUT {
     vec3 fragPos;
