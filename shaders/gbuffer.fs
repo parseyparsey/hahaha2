@@ -31,7 +31,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir);
 
 void main()
 {
-    /*
+    
     vec3 norm;
     vec2 TexCoords = fs_in.TexCoords;
     vec3 tangentViewDir;
@@ -59,12 +59,12 @@ void main()
 
     gAlbedoSpec.rgb = texture(material.texture_diffuse, TexCoords).rgb;
 
-    gAlbedoSpec.a = texture(material.texture_specular, TexCoords).r;*/
+    gAlbedoSpec.a = texture(material.texture_specular, TexCoords).r;
     
-    gPosition = vec3(1.0, 0.0, 0.0); // hardcoded red, ignore all other logic temporarily
+    /*gPosition = vec3(1.0, 0.0, 0.0); // hardcoded red, ignore all other logic temporarily
     gNormal = vec3(0.0, 1.0, 0.0);
     gAlbedoSpec = vec4(0.0, 0.0, 1.0, 1.0);
-
+*/
 }
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir){

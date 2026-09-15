@@ -925,8 +925,8 @@ int main() {
 	glGenRenderbuffers(1, &gRboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, gRboDepth);
 
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 800, 600);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 							  GL_RENDERBUFFER, gRboDepth);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -1126,12 +1126,12 @@ int main() {
 			glBindTexture(GL_TEXTURE_2D, 0);
 
 			glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, wwidth, wheight, 0,
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wwidth, wheight, 0,
 						 GL_RGBA, GL_FLOAT, NULL);
 			glBindTexture(GL_TEXTURE_2D, 0);
 
 			glBindRenderbuffer(GL_RENDERBUFFER, gRboDepth);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, wwidth,
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, wwidth,
 								  wheight);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -1190,16 +1190,16 @@ int main() {
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 		glViewport(0, 0, wwidth, wheight);
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glEnable(GL_DEPTH_TEST);
-
 		glEnable(GL_DEPTH_TEST);
+
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-				GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//testnow
 		//glStencilMask(0x00);
 
+		//glDepthFunc(GL_GREATER);
 		glDepthFunc(GL_LESS);
+		glDepthMask(GL_TRUE);
 
 		gPass.use();
 
@@ -1368,7 +1368,7 @@ int main() {
 
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
-		*/
+		*/ 
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1622,10 +1622,10 @@ int main() {
 			lightingPass.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
 		}
 
-		/* lightingpassdebug.use();
+		lightingpassdebug.use();
 		lightingpassdebug.setInt("fboAttachment", 13);
 		glActiveTexture(GL_TEXTURE13);
-		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);*/
+		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
 
 		
 		glBindVertexArray(VAO4);
