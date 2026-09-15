@@ -910,7 +910,7 @@ int main() {
 
 	glGenTextures(1, &gAlbedoSpec);
 	glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_FLOAT,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT,
 				 NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1489,7 +1489,7 @@ int main() {
 		printf("%.3f %.3f %.3f %.3f\n", m[0][2], m[1][2], m[2][2], m[3][2]);
 		printf("%.3f %.3f %.3f %.3f\n", m[0][3], m[1][3], m[2][3], m[3][3]);*/
 		//==================
-
+		 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glViewport(0, 0, wwidth, wheight);
@@ -1622,10 +1622,10 @@ int main() {
 			lightingPass.setVec3f("spotlight.specular", 0.0f, 0.0f, 0.0f);
 		}
 
-		 lightingpassdebug.use();
+		/* lightingpassdebug.use();
 		lightingpassdebug.setInt("fboAttachment", 13);
 		glActiveTexture(GL_TEXTURE13);
-		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);*/
 
 		
 		glBindVertexArray(VAO4);
