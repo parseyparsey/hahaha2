@@ -4,7 +4,7 @@ project(hahaha2)
 set(CMAKE_CXX_STANDARD 17)
 
 # Collect all source files
-file(GLOB_RECURSE SOURCES
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     "src/*.cpp"
     "src/*.c"
     "include/imgui/*.cpp"
