@@ -17,7 +17,6 @@ int main() {
 	while (!g_window.shouldClose()) {
 		g_window.pollEvents();
 
-		// nothing to draw yet — just prove the loop works
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
