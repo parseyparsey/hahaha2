@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "GameObject.h"
 #include "Mesh.h"
+#include "Camera.h"
 #include <vector>
 #include <memory>
 
@@ -37,6 +38,8 @@ public:
 	Mesh &addMesh(const std::vector<Vertex> &verts);
 	Material &addMaterial(const Material &mat);
 
+	Camera &getCamera() { return m_camera; }
+
 private:
 	std::vector<GameObject> m_objects;
 	std::vector<PointLight> m_pointLights;
@@ -45,4 +48,6 @@ private:
 
 	std::vector<std::unique_ptr<Material>> m_materials;
 	std::vector<std::unique_ptr<Mesh>> m_meshes;
+
+	Camera m_camera;
 };

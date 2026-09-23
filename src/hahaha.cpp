@@ -12,6 +12,8 @@
 #include "Scene/Scene.h"
 
 Window g_window(800, 600, "h32engine");
+Scene scene;
+Renderer renderer(800, 600);
 
 int main() { 
 	std::cout << "Hello\n";
