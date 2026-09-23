@@ -9,10 +9,10 @@ Renderer::Renderer(int width, int height) :
 	m_pingpongFBO{
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}})},
-	m_lightShader("shaders/lightshaderobj.vs", "shaders/lightshaderobj.fs"),
-	m_brightPassShader("shaders/brightpass.vs", "shaders/brightpass.fs"),
-	m_blurShader("shaders/blur.vs", "shaders/blur.fs"),
-	m_postFXShader("shaders/postfx.vs", "shaders/postfx.fs") {
+	m_lightShader("shaders/lightobj.vs", "shaders/lightobj.fs"),
+	m_brightPassShader("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs"),
+	m_blurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs"),
+	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs") {
 	initQuad();
 }
 

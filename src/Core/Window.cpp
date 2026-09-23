@@ -6,8 +6,16 @@ static void framebufferSizeCallback(GLFWwindow *handle, int width, int height) {
 	win->onResize(width, height);
 }
 
+static void cursorPosCallback(GLFWwindow *handle, double xpos, double ypos) {
+	auto *win = static_cast<Window *>(glfwGetWindowUserPointer(handle));
+	win->onMouseMove((float)xpos, (float)ypos);
+}
+
 Window::Window(int width, int height, const char *title) :
 	m_width(width), m_height(height) {
+
+	std::cout << "Hello\n";
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -22,6 +30,7 @@ Window::Window(int width, int height, const char *title) :
 	glfwMakeContextCurrent(m_handle);
 	glfwSetWindowUserPointer(m_handle, this);
 	glfwSetFramebufferSizeCallback(m_handle, framebufferSizeCallback);
+	glfwSetCursorPosCallback(m_handle, cursorPosCallback);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -41,4 +50,22 @@ void Window::onResize(int width, int height) {
 	m_height = height;
 	if (onResizeCallback)
 		onResizeCallback(width, height);
+}
+
+void Window::onMouseMove(float xpos, float ypos) {
+	if (m_firstMouse) {
+		m_lastMouseX = xpos;
+		m_lastMouseY = ypos;
+		m_firstMouse = false;
+	}
+
+	float xOffset = xpos - m_lastMouseX;
+	float yOffset = m_lastMouseY - ypos; // reversed: screen y grows downward,
+										 // camera pitch expects upward-positive
+
+	m_lastMouseX = xpos;
+	m_lastMouseY = ypos;
+
+	if (onMouseMoveCallback)
+		onMouseMoveCallback(xOffset, yOffset);
 }
