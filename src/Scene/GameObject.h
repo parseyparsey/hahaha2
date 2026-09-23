@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 #include "Mesh.h"
-#include "Material.h"
 
 struct Material {
 	unsigned int diff = 0;
@@ -30,4 +29,7 @@ public:
 	Transform transform;
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
+	bool active = true;
+
+	glm::mat4 getModelMatrix() const;
 };

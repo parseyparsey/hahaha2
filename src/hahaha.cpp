@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <Core/Window.h>
+#include "Renderer/Renderer.h"
+#include "Scene/Scene.h"
 
 Window g_window(800, 600, "h32engine");
 
