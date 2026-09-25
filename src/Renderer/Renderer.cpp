@@ -49,6 +49,8 @@ void Renderer::renderForward(Scene &scene) {
 	m_lightShader.setMat4("view", view);
 	m_lightShader.setMat4("projection", projection);
 	m_lightShader.setVec3("viewPos", cam.Position);
+	//std::cout << "Campos : " << cam.Position.x << ", " << cam.Position.y << ", "
+	//		  << cam.Position.y << std::endl;
 	m_lightShader.setInt("material.texture_diffuse", 0);
 	m_lightShader.setInt("material.texture_specular", 1);
 	m_lightShader.setInt("normalMap", 7);
@@ -57,8 +59,10 @@ void Renderer::renderForward(Scene &scene) {
 	setLightUniforms(scene);
 
 	for (auto &obj : scene.getObjects()) {
-		if (!obj.active || !obj.mesh)
+		if (!obj.active || !obj.mesh) {
+			std::cout << "r::Active Object not found!!\n";
 			continue;
+		}
 		m_lightShader.setMat4("model", obj.getModelMatrix());
 		if (obj.material)
 			bindMaterial(*obj.material);

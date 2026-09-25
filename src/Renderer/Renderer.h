@@ -37,8 +37,8 @@ private:
 	void initQuad();
 	void drawQuad();
 
-	bool m_hdrEnabled = true;
+	bool m_hdrEnabled = false;
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
-	bool m_bloomEnabled = true;
+	bool m_bloomEnabled = false;
 };

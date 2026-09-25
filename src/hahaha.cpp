@@ -56,6 +56,8 @@ void confScene() {
 
 	GameObject &cube = scene.addObject("TestCube", &cubeMesh, &mat);
 	cube.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
+	GameObject &cube1 = scene.addObject("TestCube1", &cubeMesh, &mat);
+	cube.transform.position = glm::vec3(7.0f, 0.0f, -3.0f);
 
 	auto &dl = scene.getDirLight();
 	dl.direction = glm::vec3(0.0f, -1.0f, -0.3f);

@@ -2,12 +2,12 @@
 out vec4 FragColor;
 in vec2 TexCoords;
 
-uniform sampler2D resolvedFrame;
+uniform sampler2D sceneTex;
 uniform float threshold;
 
 void main()
 {
-    vec3 color = texture(resolvedFrame, TexCoords).rgb;
+    vec3 color = texture(sceneTex, TexCoords).rgb;
     float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
     if(brightness > threshold)
         FragColor = vec4(color, 1.0);
