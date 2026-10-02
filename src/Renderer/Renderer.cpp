@@ -13,10 +13,10 @@ Renderer::Renderer(int width, int height) :
 	m_brightPassShader("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs"),
 	m_blurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs"),
 	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs"),
-	m_debugShader("shaders/debugshader.vs", "shaders/debugshader.fs") {
+	m_debugShader("shaders/debugshader1.vs", "shaders/debugshader1.fs") {
 	initQuad();
 }
-
+ 
 void Renderer::resize(int width, int height) {
 	m_width = width;
 	m_height = height;
@@ -46,15 +46,20 @@ void Renderer::render(Scene &scene) {
 	m_debugShader.setMat4("view", view);
 	m_debugShader.setMat4("projection", projection);
 	m_debugShader.setVec3("viewPos", cam.Position);
+	m_debugShader.setInt("material.texture_diffuse", TextureUnit::Diffuse);
+	m_debugShader.setInt("material.texture_specular", TextureUnit::Specular);
+	m_debugShader.setBool("blinn", true); 
 
-	auto &dl = scene.getDirLight();
-	m_debugShader.setVec3("lightDir", dl.direction);
-	m_debugShader.setVec3("lightColor", glm::vec3(1.0f));
+	setLightUniforms(scene);
 
 	for (auto &obj : scene.getObjects()) {
 		if (!obj.active || !obj.mesh)
 			continue;
 		m_debugShader.setMat4("model", obj.getModelMatrix());
+		if (obj.material) {
+			bindMaterial(*obj.material);
+			//std::cout << obj.material->spec << std::endl;
+		}
 		obj.mesh->draw();
 	}
 }
@@ -77,7 +82,7 @@ void Renderer::renderForward(Scene &scene) {
 	m_lightShader.setMat4("projection", projection);
 	m_lightShader.setVec3("viewPos", cam.Position);
 	//std::cout << "Campos : " << cam.Position.x << ", " << cam.Position.y << ", "
-	//		  << cam.Position.y << std::endl;
+	//		  << cam.Position.y << std::endl; 
 	m_lightShader.setInt("material.texture_diffuse", 0);
 	m_lightShader.setInt("material.texture_specular", 1);
 	m_lightShader.setInt("normalMap", 7);
@@ -102,7 +107,8 @@ void Renderer::bindMaterial(const Material &mat) {
 	glBindTexture(GL_TEXTURE_2D, mat.diff);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, mat.spec);
-
+	//std::cout << mat.spec << std::endl;
+	/*
 	m_lightShader.setBool("isNormalMapped", mat.isNormalMapped);
 	if (mat.isNormalMapped) {
 		glActiveTexture(GL_TEXTURE7);
@@ -115,27 +121,28 @@ void Renderer::bindMaterial(const Material &mat) {
 		glBindTexture(GL_TEXTURE_2D, mat.parallaxMap);
 		m_lightShader.setFloat("height_scale", mat.heightScale);
 	}
-
-	m_lightShader.setFloat("material.shininess", mat.shininess);
+	*/
+	m_debugShader.setFloat("material.shininess", mat.shininess);
 }
 
 void Renderer::setLightUniforms(Scene &scene) {
 	auto &dl = scene.getDirLight();
-	m_lightShader.setVec3("dirlight.direction", dl.direction);
-	m_lightShader.setVec3("dirlight.ambient", dl.ambient);
-	m_lightShader.setVec3("dirlight.diffuse", dl.diffuse);
-	m_lightShader.setVec3("dirlight.specular", dl.specular);
+	m_debugShader.setVec3("dirlight.direction", dl.direction);
+	m_debugShader.setVec3("dirlight.ambient", dl.ambient);
+	m_debugShader.setVec3("dirlight.diffuse", dl.diffuse);
+	m_debugShader.setVec3("dirlight.specular", dl.specular);
 
 	auto &lights = scene.getPointLights();
+	m_debugShader.setInt("pl_num", (int)scene.getPointLights().size());
 	for (size_t i = 0; i < lights.size(); i++) {
-		std::string p = "pLight[" + std::to_string(i) + "].";
-		m_lightShader.setFloat(p + "constant", lights[i].constant);
-		m_lightShader.setFloat(p + "linear", lights[i].linear);
-		m_lightShader.setFloat(p + "quadratic", lights[i].quadratic);
-		m_lightShader.setVec3(p + "ambient", lights[i].ambient);
-		m_lightShader.setVec3(p + "diffuse", lights[i].diffuse);
-		m_lightShader.setVec3(p + "specular", lights[i].specular);
-		m_lightShader.setVec3(p + "position", lights[i].position);
+		std::string p = "pLights[" + std::to_string(i) + "].";
+		m_debugShader.setFloat(p + "constant", lights[i].constant);
+		m_debugShader.setFloat(p + "linear", lights[i].linear);
+		m_debugShader.setFloat(p + "quadratic", lights[i].quadratic);
+		m_debugShader.setVec3(p + "ambient", lights[i].ambient);
+		m_debugShader.setVec3(p + "diffuse", lights[i].diffuse);
+		m_debugShader.setVec3(p + "specular", lights[i].specular);
+		m_debugShader.setVec3(p + "position", lights[i].position);
 	}
 
 	auto &sl = scene.getSpotLight();

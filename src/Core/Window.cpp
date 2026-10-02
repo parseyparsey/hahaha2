@@ -35,6 +35,7 @@ Window::Window(int width, int height, const char *title) :
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 	}
+
 }
 
 Window::~Window() { glfwTerminate(); }

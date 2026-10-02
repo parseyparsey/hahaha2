@@ -9,6 +9,7 @@
 #include <iostream>
 #include <Core/Window.h>
 #include "Renderer/Renderer.h"
+#include "Texture.h"
 #include "Scene/Scene.h"
 #include "Input/Input.h"
 
@@ -16,6 +17,10 @@ Window g_window(800, 600, "h32engine");
 Scene scene;
 Renderer renderer(800, 600);
 
+Texture containerDiffuse("textures/container2.png", false,
+						 false);
+Texture containerSpecular("textures/container2_specular.png", false, false);
+Texture whitetxt("textures/white.png", false, false);
 float dt;
 float lasttime;
 
@@ -28,6 +33,10 @@ int main() {
 	g_window.onMouseMoveCallback = [&](float xOffset, float yOffset) {
 		scene.getCamera().ProcessMouseMovement(xOffset, yOffset);
 	};
+
+	glfwSetInputMode(g_window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	std::cout << containerDiffuse.ID << std::endl;
 
 	confScene();
 
@@ -51,21 +60,67 @@ void confScene() {
 	Mesh &cubeMesh = scene.addMesh(makeCubeVertices());
 
 	Material placeholderMat{};
-	placeholderMat.diff =
-		0; // 0 = no texture bound; fine for a first smoke test
-	placeholderMat.spec = 0;
-	Material &mat = scene.addMaterial(placeholderMat);
+	placeholderMat.diff = containerDiffuse.ID;
+	placeholderMat.spec = containerSpecular.ID;
+	Material &container_mat = scene.addMaterial(placeholderMat);
 
-	GameObject &cube = scene.addObject("TestCube", &cubeMesh, &mat);
-	cube.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
-	GameObject &cube1 = scene.addObject("TestCube1", &cubeMesh, &mat);
-	cube.transform.position = glm::vec3(7.0f, 0.0f, -3.0f);
+	glm::vec3 cubePositions[] = {
+		glm::vec3(2.0f, 2.0f, -4.0f),	glm::vec3(2.0f, 5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),	glm::vec3(-1.7f, 3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),	glm::vec3(1.5f, 2.0f, -2.5f),
+		glm::vec3(1.5f, 0.2f, -1.5f),	glm::vec3(-1.3f, 1.0f, -1.5f),
+		glm::vec3(-6.0f, -2.0f, -22.0f)};
+
+	int cubenum = sizeof(cubePositions) / sizeof(cubePositions[0]);
+
+	for (unsigned int i = 0; i < cubenum; i++) {
+		const char* cubename = ("cube" + std::to_string(i)).c_str();
+		GameObject &cube = scene.addObject(cubename, &cubeMesh, &container_mat);
+		cube.transform.position = cubePositions[i];
+		//float angle = 20.0f * i;
+	}
 
 	auto &dl = scene.getDirLight();
 	dl.direction = glm::vec3(0.0f, -1.0f, -0.3f);
-	dl.ambient = glm::vec3(0.2f);
-	dl.diffuse = glm::vec3(0.8f);
-	dl.specular = glm::vec3(0.5f);
+	dl.ambient = glm::vec3(0.01f);
+	dl.diffuse = glm::vec3(0.2f);
+	dl.specular = glm::vec3(0.0f);
+
+	
+	glm::vec3 plightPos[] = {
+		glm::vec3(0.0f, 0.0f, -3.0f),	glm::vec3(5.0f, 5.0f, -5.0f),
+		glm::vec3(-5.0f, 2.0f, -5.0f),	glm::vec3(0.0f, -2.0f, -10.0f),
+		glm::vec3(3.0f, -2.0f, -10.0f), glm::vec3(2.0f, 1.5f, -5.0f),
+	};
+
+	auto &pl = scene.getPointLights();
+
+	PointLight pl0;
+	pl0.position = plightPos[0];
+	pl0.constant = 1.0f;
+	pl0.linear = 0.09f;
+	pl0.quadratic = 0.032f;
+	pl0.ambient = glm::vec3(0.8f);
+	pl0.diffuse = glm::vec3(0.8f);
+	pl0.specular = glm::vec3(0.3f);
+	pl.push_back(pl0);
+
+	placeholderMat.diff = whitetxt.ID;
+	placeholderMat.spec = whitetxt.ID;
+	Material &plight_mat = scene.addMaterial(placeholderMat);
+	
+	GameObject &cubelight = scene.addObject("pl0", &cubeMesh, &plight_mat);
+	cubelight.transform.position = plightPos[0];
+	cubelight.transform.scale = glm::vec3(0.3);
+
+	/* scene.getPointLights().push_back({
+		glm::vec3(1.0f, 2.0f, -3.0f), // position
+		1.0f, 0.09f, 0.032f,		  // constant, linear, quadratic
+		glm::vec3(0.05f),			  // ambient
+		glm::vec3(0.6f),			  // diffuse
+		glm::vec3(0.3f)				  // specular
+	});*/
 }
 
 std::vector<Vertex> makeCubeVertices() {

@@ -42,4 +42,11 @@ private:
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
 	bool m_bloomEnabled = false;
+
+	enum TextureUnit {
+		Diffuse = 0,
+		Specular = 1,
+		NormalMap = 7,
+		ParallaxMap = 8
+	};
 };
