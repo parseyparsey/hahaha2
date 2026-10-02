@@ -29,6 +29,8 @@ int main() {
 		scene.getCamera().ProcessMouseMovement(xOffset, yOffset);
 	};
 
+	confScene();
+
 	while (!g_window.shouldClose()) {
 		float currentFrame = glfwGetTime();
 		dt = currentFrame - lasttime;
