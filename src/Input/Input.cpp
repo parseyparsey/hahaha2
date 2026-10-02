@@ -34,6 +34,16 @@ void processInput(GLFWwindow *window, Scene &scene, float deltaTime) {
 	} else if (F3STATE == GLFW_RELEASE) {
 		isF3pressed = false;
 	}
+
+	static bool isFpressed = false;
+	int FSTATE = glfwGetKey(window, GLFW_KEY_F);
+	if (FSTATE == GLFW_PRESS && !isFpressed) {
+		flashlight_state = (flashlight_state + 1) % 3;
+		isFpressed = true;
+	} else if (FSTATE == GLFW_RELEASE) {
+		isFpressed = false;
+	}
+
 	/* if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		cam.ProcessKeyboard(CameraMovement::Up, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)

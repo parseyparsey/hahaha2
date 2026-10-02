@@ -27,11 +27,15 @@ void Renderer::resize(int width, int height) {
 }
 
 void Renderer::render(Scene &scene) {
-	//renderForward(scene);
+	renderForward(scene);
 	//if (m_bloomEnabled)
 	//	bloom();
 	//postFX();
 
+	
+}
+
+void Renderer::renderForward(Scene &scene) {
 	glViewport(0, 0, m_width, m_height);
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
@@ -48,7 +52,7 @@ void Renderer::render(Scene &scene) {
 	m_debugShader.setVec3("viewPos", cam.Position);
 	m_debugShader.setInt("material.texture_diffuse", TextureUnit::Diffuse);
 	m_debugShader.setInt("material.texture_specular", TextureUnit::Specular);
-	m_debugShader.setBool("blinn", true); 
+	m_debugShader.setBool("blinn", true);
 
 	setLightUniforms(scene);
 
@@ -58,46 +62,8 @@ void Renderer::render(Scene &scene) {
 		m_debugShader.setMat4("model", obj.getModelMatrix());
 		if (obj.material) {
 			bindMaterial(*obj.material);
-			//std::cout << obj.material->spec << std::endl;
+			// std::cout << obj.material->spec << std::endl;
 		}
-		obj.mesh->draw();
-	}
-}
-
-void Renderer::renderForward(Scene &scene) {
-	m_resolveFBO.bind();
-	glViewport(0, 0, m_width, m_height);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	auto &cam = scene.getCamera();
-	glm::mat4 view = cam.getViewMatrix();
-	glm::mat4 projection =
-		cam.getProjectionMatrix((float)m_width / (float)m_height);
-
-	m_lightShader.use();
-	m_lightShader.setMat4("view", view);
-	m_lightShader.setMat4("projection", projection);
-	m_lightShader.setVec3("viewPos", cam.Position);
-	//std::cout << "Campos : " << cam.Position.x << ", " << cam.Position.y << ", "
-	//		  << cam.Position.y << std::endl; 
-	m_lightShader.setInt("material.texture_diffuse", 0);
-	m_lightShader.setInt("material.texture_specular", 1);
-	m_lightShader.setInt("normalMap", 7);
-	m_lightShader.setInt("parallaxDepthMap", 8);
-
-	setLightUniforms(scene);
-
-	for (auto &obj : scene.getObjects()) {
-		if (!obj.active || !obj.mesh) {
-			std::cout << "r::Active Object not found!!\n";
-			continue;
-		}
-		m_lightShader.setMat4("model", obj.getModelMatrix());
-		if (obj.material)
-			bindMaterial(*obj.material);
 		obj.mesh->draw();
 	}
 }
@@ -146,18 +112,18 @@ void Renderer::setLightUniforms(Scene &scene) {
 	}
 
 	auto &sl = scene.getSpotLight();
-	m_lightShader.setVec3("spotlight.position", sl.position);
-	m_lightShader.setVec3("spotlight.direction", sl.direction);
-	m_lightShader.setVec3("spotlight.ambient", sl.ambient);
-	m_lightShader.setVec3("spotlight.diffuse", sl.diffuse);
-	m_lightShader.setVec3("spotlight.specular", sl.specular);
-	m_lightShader.setFloat("spotlight.cutoff", sl.cutoff);
-	m_lightShader.setFloat("spotlight.outercutoff", sl.outerCutoff);
-	m_lightShader.setFloat("spotlight.constant", sl.constant);
-	m_lightShader.setFloat("spotlight.linear", sl.linear);
-	m_lightShader.setFloat("spotlight.quadratic", sl.quadratic);
+	m_debugShader.setVec3("spotlight.position", sl.position);
+	m_debugShader.setVec3("spotlight.direction", sl.direction);
+	m_debugShader.setVec3("spotlight.ambient", sl.ambient);
+	m_debugShader.setVec3("spotlight.diffuse", sl.diffuse);
+	m_debugShader.setVec3("spotlight.specular", sl.specular);
+	m_debugShader.setFloat("spotlight.cutoff", sl.cutoff);
+	m_debugShader.setFloat("spotlight.outercutoff", sl.outerCutoff);
+	m_debugShader.setFloat("spotlight.constant", sl.constant);
+	m_debugShader.setFloat("spotlight.linear", sl.linear);
+	m_debugShader.setFloat("spotlight.quadratic", sl.quadratic);
 }
-
+ 
 void Renderer::bloom() {
 	m_brightFBO.bind();
 	glClear(GL_COLOR_BUFFER_BIT);

@@ -25,6 +25,7 @@ float dt;
 float lasttime;
 
 void confScene();
+void updateMyScene();
 std::vector<Vertex> makeCubeVertices();
 
 int main() { 
@@ -47,6 +48,7 @@ int main() {
 		
 		g_window.pollEvents();
 		processInput(g_window.getHandle(), scene, dt);
+		updateMyScene();
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -114,6 +116,18 @@ void confScene() {
 	cubelight.transform.position = plightPos[0];
 	cubelight.transform.scale = glm::vec3(0.3);
 
+	SpotLight sl0{
+		glm::vec3(0.0f), glm::vec3(0.0f), 
+		glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), 
+		glm::cos(glm::radians(12.5f)),
+		glm::cos(glm::radians(17.5f)),
+		1.0f, 0.45f, 0.0075f
+	};
+
+	auto &sl = scene.getSpotLight();
+	sl = sl0;
+	
+
 	/* scene.getPointLights().push_back({
 		glm::vec3(1.0f, 2.0f, -3.0f), // position
 		1.0f, 0.09f, 0.032f,		  // constant, linear, quadratic
@@ -121,6 +135,26 @@ void confScene() {
 		glm::vec3(0.6f),			  // diffuse
 		glm::vec3(0.3f)				  // specular
 	});*/
+}
+
+void updateMyScene() { 
+	auto &sl = scene.getSpotLight(); 
+	sl.position = scene.getCamera().Position;
+	sl.direction = scene.getCamera().Front;
+
+	if (flashlight_state == 1) {
+		sl.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+		sl.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+		sl.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+	} else if (flashlight_state == 2) {
+		sl.ambient = glm::vec3(0.05f, 0.05f, 0.05f);
+		sl.diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
+		sl.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+	} else if (flashlight_state == 0) {
+		sl.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
+		sl.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
+		sl.specular = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
 }
 
 std::vector<Vertex> makeCubeVertices() {
