@@ -32,6 +32,7 @@ private:
 	Shader m_brightPassShader;
 	Shader m_blurShader;
 	Shader m_postFXShader;
+	Shader m_debugShader;
 
 	unsigned int m_quadVAO = 0, m_quadVBO = 0;
 	void initQuad();

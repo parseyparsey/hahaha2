@@ -12,7 +12,8 @@ Renderer::Renderer(int width, int height) :
 	m_lightShader("shaders/lightobj.vs", "shaders/lightobj.fs"),
 	m_brightPassShader("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs"),
 	m_blurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs"),
-	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs") {
+	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs"),
+	m_debugShader("shaders/debugshader.vs", "shaders/debugshader.fs") {
 	initQuad();
 }
 
@@ -26,10 +27,36 @@ void Renderer::resize(int width, int height) {
 }
 
 void Renderer::render(Scene &scene) {
-	renderForward(scene);
-	if (m_bloomEnabled)
-		bloom();
-	postFX();
+	//renderForward(scene);
+	//if (m_bloomEnabled)
+	//	bloom();
+	//postFX();
+
+	glViewport(0, 0, m_width, m_height);
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	auto &cam = scene.getCamera();
+	glm::mat4 view = cam.getViewMatrix();
+	glm::mat4 projection =
+		cam.getProjectionMatrix((float)m_width / (float)m_height);
+
+	m_debugShader.use();
+	m_debugShader.setMat4("view", view);
+	m_debugShader.setMat4("projection", projection);
+	m_debugShader.setVec3("viewPos", cam.Position);
+
+	auto &dl = scene.getDirLight();
+	m_debugShader.setVec3("lightDir", dl.direction);
+	m_debugShader.setVec3("lightColor", glm::vec3(1.0f));
+
+	for (auto &obj : scene.getObjects()) {
+		if (!obj.active || !obj.mesh)
+			continue;
+		m_debugShader.setMat4("model", obj.getModelMatrix());
+		obj.mesh->draw();
+	}
 }
 
 void Renderer::renderForward(Scene &scene) {
