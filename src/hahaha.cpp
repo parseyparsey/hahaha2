@@ -118,7 +118,7 @@ void confScene() {
 
 	SpotLight sl0{
 		glm::vec3(0.0f), glm::vec3(0.0f), 
-		glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), 
+		glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3(1.0f), 
 		glm::cos(glm::radians(12.5f)),
 		glm::cos(glm::radians(17.5f)),
 		1.0f, 0.45f, 0.0075f

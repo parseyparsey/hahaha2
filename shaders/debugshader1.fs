@@ -2,6 +2,7 @@
 out vec4 FragColor;
 
 #define MAX_POINT_LIGHTS 16
+#define MAX_SPOT_LIGHTS 16  
 
 struct Material{
     sampler2D texture_diffuse;
@@ -53,7 +54,8 @@ uniform vec3 viewPos;
 uniform dirLight dirlight;
 uniform pointLight pLights[MAX_POINT_LIGHTS];
 uniform int pl_num;
-uniform spotLight spotlight;
+uniform spotLight spotlight[MAX_SPOT_LIGHTS];
+uniform int sl_num;
 
 uniform bool blinn;
 uniform Material material;
@@ -72,7 +74,8 @@ void main() {
     for(int i = 0; i < pl_num; i++)
         result += calcPointLight(pLights[i], norm, FragPos, viewDir, TexCoords);
 
-    result += calcSpotLight(spotlight, norm, FragPos, viewDir, TexCoords);
+    for(int i = 0; i < sl_num; i++)
+        result += calcSpotLight(spotlight[i], norm, FragPos, viewDir, TexCoords);
 
     FragColor = vec4(result, 1.0);
 }

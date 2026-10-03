@@ -31,8 +31,6 @@ void Renderer::render(Scene &scene) {
 	//if (m_bloomEnabled)
 	//	bloom();
 	//postFX();
-
-	
 }
 
 void Renderer::renderForward(Scene &scene) {
