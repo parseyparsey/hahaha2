@@ -118,14 +118,14 @@ void confScene() {
 
 	SpotLight sl0{
 		glm::vec3(0.0f), glm::vec3(0.0f), 
-		glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3(1.0f), 
+		glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), 
 		glm::cos(glm::radians(12.5f)),
 		glm::cos(glm::radians(17.5f)),
 		1.0f, 0.45f, 0.0075f
 	};
 
 	auto &sl = scene.getSpotLight();
-	sl = sl0;
+	sl.push_back(sl0);
 	
 
 	/* scene.getPointLights().push_back({
@@ -139,21 +139,21 @@ void confScene() {
 
 void updateMyScene() { 
 	auto &sl = scene.getSpotLight(); 
-	sl.position = scene.getCamera().Position;
-	sl.direction = scene.getCamera().Front;
+	sl.front().position = scene.getCamera().Position;
+	sl.front().direction = scene.getCamera().Front;
 
 	if (flashlight_state == 1) {
-		sl.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
-		sl.diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-		sl.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+		sl.front().ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+		sl.front().diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+		sl.front().specular = glm::vec3(1.0f, 1.0f, 1.0f);
 	} else if (flashlight_state == 2) {
-		sl.ambient = glm::vec3(0.05f, 0.05f, 0.05f);
-		sl.diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
-		sl.specular = glm::vec3(0.5f, 0.5f, 0.5f);
+		sl.front().ambient = glm::vec3(0.05f, 0.05f, 0.05f);
+		sl.front().diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
+		sl.front().specular = glm::vec3(0.5f, 0.5f, 0.5f);
 	} else if (flashlight_state == 0) {
-		sl.ambient = glm::vec3(0.0f, 0.0f, 0.0f);
-		sl.diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
-		sl.specular = glm::vec3(0.0f, 0.0f, 0.0f);
+		sl.front().ambient = glm::vec3(0.0f, 0.0f, 0.0f);
+		sl.front().diffuse = glm::vec3(0.0f, 0.0f, 0.0f);
+		sl.front().specular = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 }
 

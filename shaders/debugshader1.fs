@@ -60,9 +60,12 @@ uniform int sl_num;
 uniform bool blinn;
 uniform Material material;
 
+uniform sampler2D dirShadowMap;
+
 vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords);
 vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords);
 vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords);
+float dirShadowCalc(vec4 fragPosLightSpace, dirLight light);
 
 void main() {
     vec3 norm = normalize(Normal);
@@ -182,4 +185,34 @@ vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec
     specular *= attenuation * intensity;
 
     return (ambient + diffuse + specular);
+}
+
+float dirShadowCalc(vec4 fragPosLightSpace, dirLight light){
+
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(dirShadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+
+    vec3 normal = normalize(Normal);
+    vec3 lightDir = normalize(-light.direction);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(dirShadowMap, 0);
+
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(dirShadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    if (projCoords.z > 1.0)
+        shadow = 0.0;
+
+    return shadow;
 }

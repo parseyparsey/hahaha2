@@ -24,6 +24,7 @@ private:
 
 	int m_height, m_width;
 
+	Framebuffer m_dirShadowDepthFBO;
 	Framebuffer m_resolveFBO;
 	Framebuffer m_brightFBO;
 	Framebuffer m_pingpongFBO[2];

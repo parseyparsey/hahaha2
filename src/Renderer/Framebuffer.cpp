@@ -42,20 +42,38 @@ void Framebuffer::create() {
 	glGenTextures((GLsizei)m_colorTextures.size(), m_colorTextures.data());
 
 	std::vector<GLenum> drawBuffers;
-	for (size_t i = 0; i < m_colorTextures.size(); ++i) {
-		const auto &spec = m_specs[i];
-		glBindTexture(GL_TEXTURE_2D, m_colorTextures[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, spec.internalFormat, m_width, m_height,
-					 0, spec.format, spec.type, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, spec.minFilter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, spec.magFilter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, spec.wrap);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, spec.wrap);
 
-		GLenum attachment = GL_COLOR_ATTACHMENT0 + (GLenum)i;
-		glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D,
-							   m_colorTextures[i], 0);
-		drawBuffers.push_back(attachment);
+	if (m_depthMode == DepthMode::DepthTexture) {
+		glGenTextures(1, &m_depthTexture);
+		glBindTexture(GL_TEXTURE_2D, m_depthTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0,
+					 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+							   GL_TEXTURE_2D, m_depthTexture, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+	} else {
+		for (size_t i = 0; i < m_colorTextures.size(); ++i) {
+			const auto &spec = m_specs[i];
+			glBindTexture(GL_TEXTURE_2D, m_colorTextures[i]);
+			glTexImage2D(GL_TEXTURE_2D, 0, spec.internalFormat, m_width, m_height,
+						 0, spec.format, spec.type, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, spec.minFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, spec.magFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, spec.wrap);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, spec.wrap);
+
+			GLenum attachment = GL_COLOR_ATTACHMENT0 + (GLenum)i;
+			glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D,
+								   m_colorTextures[i], 0);
+			drawBuffers.push_back(attachment);
+		}
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 

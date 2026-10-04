@@ -14,7 +14,8 @@ struct AttachmentSpec {
 enum class DepthMode {
 	None,
 	Depth,
-	DepthStencil
+	DepthStencil,
+	DepthTexture
 };
 
 class Framebuffer {

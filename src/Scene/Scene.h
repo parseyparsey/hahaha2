@@ -33,7 +33,7 @@ public:
 	std::vector<GameObject> &getObjects() { return m_objects; }
 	std::vector<PointLight> &getPointLights() { return m_pointLights; }
 	DirLight &getDirLight() { return m_dirLight; }
-	SpotLight &getSpotLight() { return m_spotLight; }
+	std::vector<SpotLight> &getSpotLight() { return m_spotLight; }
 
 	Mesh &addMesh(const std::vector<Vertex> &verts);
 	Material &addMaterial(const Material &mat);
@@ -44,7 +44,7 @@ private:
 	std::vector<GameObject> m_objects;
 	std::vector<PointLight> m_pointLights;
 	DirLight m_dirLight;
-	SpotLight m_spotLight;
+	std::vector<SpotLight> m_spotLight;
 
 	std::vector<std::unique_ptr<Material>> m_materials;
 	std::vector<std::unique_ptr<Mesh>> m_meshes;

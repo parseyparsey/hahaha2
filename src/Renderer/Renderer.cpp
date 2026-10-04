@@ -5,6 +5,8 @@ Renderer::Renderer(int width, int height) :
 	m_height(height),
 	m_resolveFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}},
 				 DepthMode::Depth),
+	m_dirShadowDepthFBO(2048, 2048, 
+		{}, DepthMode::DepthTexture),
 	m_brightFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
 	m_pingpongFBO{
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
@@ -110,16 +112,20 @@ void Renderer::setLightUniforms(Scene &scene) {
 	}
 
 	auto &sl = scene.getSpotLight();
-	m_debugShader.setVec3("spotlight.position", sl.position);
-	m_debugShader.setVec3("spotlight.direction", sl.direction);
-	m_debugShader.setVec3("spotlight.ambient", sl.ambient);
-	m_debugShader.setVec3("spotlight.diffuse", sl.diffuse);
-	m_debugShader.setVec3("spotlight.specular", sl.specular);
-	m_debugShader.setFloat("spotlight.cutoff", sl.cutoff);
-	m_debugShader.setFloat("spotlight.outercutoff", sl.outerCutoff);
-	m_debugShader.setFloat("spotlight.constant", sl.constant);
-	m_debugShader.setFloat("spotlight.linear", sl.linear);
-	m_debugShader.setFloat("spotlight.quadratic", sl.quadratic);
+	m_debugShader.setInt("sl_num", (int)scene.getSpotLight().size());
+	for (size_t i = 0; i < sl.size(); i++) {
+		std::string p = "spotlight[" + std::to_string(i) + "].";
+		m_debugShader.setVec3(p + "position", sl[i].position);
+		m_debugShader.setVec3(p + "direction", sl[i].direction);
+		m_debugShader.setVec3(p + "ambient", sl[i].ambient);
+		m_debugShader.setVec3(p + "diffuse", sl[i].diffuse);
+		m_debugShader.setVec3(p + "specular", sl[i].specular);
+		m_debugShader.setFloat(p + "cutoff", sl[i].cutoff);
+		m_debugShader.setFloat(p + "outercutoff", sl[i].outerCutoff);
+		m_debugShader.setFloat(p + "constant", sl[i].constant);
+		m_debugShader.setFloat(p + "linear", sl[i].linear);
+		m_debugShader.setFloat(p + "quadratic", sl[i].quadratic);
+	}
 }
  
 void Renderer::bloom() {
