@@ -13,7 +13,7 @@
 #include "Scene/Scene.h"
 #include "Input/Input.h"
 
-Window g_window(800, 600, "h32engine");
+Window g_window(800, 600, "hahaha2");
 Scene scene;
 Renderer renderer(800, 600);
 
