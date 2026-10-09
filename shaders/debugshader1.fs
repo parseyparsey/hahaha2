@@ -48,6 +48,7 @@ struct spotLight{
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
+in vec4 fragPosLightSpace;
 
 uniform vec3 viewPos;
 
@@ -65,7 +66,7 @@ uniform sampler2D dirShadowMap;
 vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords);
 vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords);
 vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords);
-float dirShadowCalc(vec4 fragPosLightSpace, dirLight light);
+float calcDirShadow(vec4 fragPosLightSpace, dirLight light);
 
 void main() {
     vec3 norm = normalize(Normal);
@@ -103,11 +104,11 @@ vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords){
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse, TexCoords));
     vec3 specular = light.specular * spec * vec3(texture(material.texture_specular, TexCoords));
 
-    //float shadow = shadowCalc(fs_in.fragPosLightSpace, light);
+    float shadow = calcDirShadow(fragPosLightSpace, light);
 
-    //return (ambient + (1.0 - shadow) * (diffuse + specular));
+    return (ambient + (1.0 - shadow) * (diffuse + specular));
     
-    return (ambient + diffuse + specular);
+    //return (ambient + diffuse + specular);
     //vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;  
 }
 
@@ -187,7 +188,7 @@ vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec
     return (ambient + diffuse + specular);
 }
 
-float dirShadowCalc(vec4 fragPosLightSpace, dirLight light){
+float calcDirShadow(vec4 fragPosLightSpace, dirLight light){
 
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;

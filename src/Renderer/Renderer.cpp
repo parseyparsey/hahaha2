@@ -5,7 +5,7 @@ Renderer::Renderer(int width, int height) :
 	m_height(height),
 	m_resolveFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}},
 				 DepthMode::Depth),
-	m_dirShadowDepthFBO(2048, 2048, 
+	m_dirShadowDepthFBO(m_dirShadowMapSize, m_dirShadowMapSize, 
 		{}, DepthMode::DepthTexture),
 	m_brightFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
 	m_pingpongFBO{
@@ -50,11 +50,17 @@ void Renderer::renderForward(Scene &scene) {
 		cam.getProjectionMatrix((float)m_width / (float)m_height);
 
 	m_debugShader.use();
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, m_dirShadowDepthFBO.getDepthAttachment());
+
 	m_debugShader.setMat4("view", view);
 	m_debugShader.setMat4("projection", projection);
 	m_debugShader.setVec3("viewPos", cam.Position);
 	m_debugShader.setInt("material.texture_diffuse", TextureUnit::Diffuse);
 	m_debugShader.setInt("material.texture_specular", TextureUnit::Specular);
+	m_debugShader.setInt("dirShadowMap", TextureUnit::DirShadowMap);
+	m_debugShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
 	m_debugShader.setBool("blinn", true);
 
 	setLightUniforms(scene);
@@ -213,7 +219,7 @@ void Renderer::renderDirShadow(Scene &scene) {
 	glm::vec3 lightDir = glm::normalize(obj.direction);
 	glm::mat4 lightView = glm::lookAt(-lightDir * 20.0f, glm::vec3(0.0f),
 									  glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+	lightSpaceMatrix = lightProjection * lightView;
 
 	m_dirShadowDepthShader.use();
 	m_dirShadowDepthShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
@@ -224,13 +230,13 @@ void Renderer::renderDirShadow(Scene &scene) {
 	glEnable(GL_DEPTH_TEST);
 
 	for (auto &obj : scene.getObjects()) {
-		if (!obj.active)
+		if (!obj.active || !obj.mesh)
 			continue;
 		m_dirShadowDepthShader.setMat4("model", obj.getModelMatrix());
 		obj.mesh->draw();
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	Framebuffer::bindDefault();
 	glViewport(0, 0, m_width, m_height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

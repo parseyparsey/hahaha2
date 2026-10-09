@@ -51,7 +51,11 @@ private:
 	enum TextureUnit {
 		Diffuse = 0,
 		Specular = 1,
+		DirShadowMap = 4,
+		PointShadowMap = 5,
 		NormalMap = 7,
 		ParallaxMap = 8
 	};
+
+	glm::mat4 lightSpaceMatrix;
 };
