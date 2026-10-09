@@ -17,6 +17,7 @@ public:
 	void render(Scene &scene);
 private:
 	void renderForward(Scene &scene);
+	void renderDirShadow(Scene &scene);
 	void bloom();
 	void postFX();
 	void bindMaterial(const Material &material);
@@ -34,6 +35,7 @@ private:
 	Shader m_blurShader;
 	Shader m_postFXShader;
 	Shader m_debugShader;
+	Shader m_dirShadowDepthShader;
 
 	unsigned int m_quadVAO = 0, m_quadVBO = 0;
 	void initQuad();
@@ -43,6 +45,8 @@ private:
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
 	bool m_bloomEnabled = false;
+
+	int m_dirShadowMapSize = 2048;
 
 	enum TextureUnit {
 		Diffuse = 0,

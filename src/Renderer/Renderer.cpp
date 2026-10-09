@@ -15,7 +15,9 @@ Renderer::Renderer(int width, int height) :
 	m_brightPassShader("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs"),
 	m_blurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs"),
 	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs"),
-	m_debugShader("shaders/debugshader1.vs", "shaders/debugshader1.fs") {
+	m_debugShader("shaders/debugshader1.vs", "shaders/debugshader1.fs"),
+	m_dirShadowDepthShader("shaders/depth_shader.vs", "shaders/depth_shader.fs")
+{
 	initQuad();
 }
  
@@ -29,6 +31,7 @@ void Renderer::resize(int width, int height) {
 }
 
 void Renderer::render(Scene &scene) {
+	renderDirShadow(scene);
 	renderForward(scene);
 	//if (m_bloomEnabled)
 	//	bloom();
@@ -199,4 +202,35 @@ void Renderer::drawQuad() {
 	glBindVertexArray(m_quadVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
+}
+
+void Renderer::renderDirShadow(Scene &scene) {
+	auto &obj = scene.getDirLight();
+
+	float near_plane = 1.0f, far_plane = 200.0f; // 7.5f;
+	glm::mat4 lightProjection =
+		glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+	glm::vec3 lightDir = glm::normalize(obj.direction);
+	glm::mat4 lightView = glm::lookAt(-lightDir * 20.0f, glm::vec3(0.0f),
+									  glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+	m_dirShadowDepthShader.use();
+	m_dirShadowDepthShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
+
+	glViewport(0, 0, m_dirShadowMapSize, m_dirShadowMapSize);
+	m_dirShadowDepthFBO.bind();
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+
+	for (auto &obj : scene.getObjects()) {
+		if (!obj.active)
+			continue;
+		m_dirShadowDepthShader.setMat4("model", obj.getModelMatrix());
+		obj.mesh->draw();
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, m_width, m_height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
