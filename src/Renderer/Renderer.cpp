@@ -6,7 +6,7 @@ Renderer::Renderer(int width, int height) :
 	m_resolveFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}},
 				 DepthMode::Depth),
 	m_dirShadowDepthFBO(m_dirShadowMapSize, m_dirShadowMapSize, 
-		{}, DepthMode::DepthTexture),
+		std::vector<AttachmentSpec>{}, DepthMode::DepthTexture),
 	m_brightFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
 	m_pingpongFBO{
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
@@ -19,6 +19,11 @@ Renderer::Renderer(int width, int height) :
 	m_dirShadowDepthShader("shaders/depth_shader.vs", "shaders/depth_shader.fs")
 {
 	initQuad();
+
+	for (int i = 0; i < MAX_SPOT_LIGHTS; i++)
+		m_spotShadowDepthFBO.emplace_back(m_spotShadowMapSize, m_spotShadowMapSize,
+									 std::vector<AttachmentSpec>{},
+									 DepthMode::DepthTexture);
 }
  
 void Renderer::resize(int width, int height) {
@@ -32,6 +37,7 @@ void Renderer::resize(int width, int height) {
 
 void Renderer::render(Scene &scene) {
 	renderDirShadow(scene);
+	renderSpotShadow(scene);
 	renderForward(scene);
 	//if (m_bloomEnabled)
 	//	bloom();
@@ -63,6 +69,15 @@ void Renderer::renderForward(Scene &scene) {
 	m_debugShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
 	m_debugShader.setBool("blinn", true);
 
+	for (int i = 0; i < (int)m_spotLightSpaceMatrices.size(); i++) {
+		glActiveTexture(GL_TEXTURE0 + TextureUnit::SpotShadowBase + i);
+		glBindTexture(GL_TEXTURE_2D, m_spotShadowDepthFBO[i].getDepthAttachment());
+		m_debugShader.setInt("spotShadowMap[" + std::to_string(i) + "]",
+							 TextureUnit::SpotShadowBase + i);
+		m_debugShader.setMat4("spotLightSpace[" + std::to_string(i) + "]",
+							  m_spotLightSpaceMatrices[i]);
+	}
+	 
 	setLightUniforms(scene);
 
 	for (auto &obj : scene.getObjects()) {
@@ -239,4 +254,43 @@ void Renderer::renderDirShadow(Scene &scene) {
 	Framebuffer::bindDefault();
 	glViewport(0, 0, m_width, m_height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+glm::mat4 Renderer::spotLightSpaceMatrix(SpotLight& sl) {
+	float outerAngle = glm::degrees(glm::acos(sl.outerCutoff));
+	float fov = outerAngle * 2.0f + 2.0f;
+	glm::mat4 proj = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 50.0f);
+
+	glm::vec3 dir = glm::normalize(sl.direction);
+	glm::vec3 up = std::abs(dir.y) > 0.99f ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
+	glm::mat4 view = glm::lookAt(sl.position, sl.position + dir, up);
+	return proj * view;
+}
+
+void Renderer::renderSpotShadow(Scene &scene) {
+	auto &sl = scene.getSpotLight();
+
+	int sl_count = std::min((int)sl.size(), MAX_SPOT_LIGHTS);
+	m_spotLightSpaceMatrices.assign(sl_count, glm::mat4(1.0f));
+
+	m_dirShadowDepthShader.use();
+	glViewport(0, 0, m_spotShadowMapSize, m_spotShadowMapSize);
+	glEnable(GL_DEPTH_TEST);
+
+	for (int i = 0; i < sl_count; i++) {
+		m_spotLightSpaceMatrices[i] = spotLightSpaceMatrix(sl[i]);
+		m_dirShadowDepthShader.setMat4("LightSpaceMatrix", m_spotLightSpaceMatrices[i]);
+
+		m_spotShadowDepthFBO[i].bind();
+		glClear(GL_DEPTH_BUFFER_BIT);
+		for (auto &obj : scene.getObjects()) {
+			if (!obj.active || !obj.mesh)
+				continue;
+			m_dirShadowDepthShader.setMat4("model", obj.getModelMatrix());
+			obj.mesh->draw();
+		}
+	}
+
+	Framebuffer::bindDefault();
+	glViewport(0, 0, m_width, m_height);
 }

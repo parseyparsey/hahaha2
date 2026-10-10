@@ -18,6 +18,8 @@ public:
 private:
 	void renderForward(Scene &scene);
 	void renderDirShadow(Scene &scene);
+	void renderSpotShadow(Scene &scene);
+	glm::mat4 spotLightSpaceMatrix(SpotLight &sl);
 	void bloom();
 	void postFX();
 	void bindMaterial(const Material &material);
@@ -29,6 +31,9 @@ private:
 	Framebuffer m_resolveFBO;
 	Framebuffer m_brightFBO;
 	Framebuffer m_pingpongFBO[2];
+
+	std::vector<Framebuffer> m_spotShadowDepthFBO;
+	std::vector<glm::mat4> m_spotLightSpaceMatrices;
 
 	Shader m_lightShader;
 	Shader m_brightPassShader;
@@ -47,6 +52,9 @@ private:
 	bool m_bloomEnabled = false;
 
 	int m_dirShadowMapSize = 2048;
+	int m_spotShadowMapSize = 1024;
+
+	static constexpr int MAX_SPOT_LIGHTS = 4;
 
 	enum TextureUnit {
 		Diffuse = 0,
@@ -54,7 +62,8 @@ private:
 		DirShadowMap = 4,
 		PointShadowMap = 5,
 		NormalMap = 7,
-		ParallaxMap = 8
+		ParallaxMap = 8,
+		SpotShadowBase = 9
 	};
 
 	glm::mat4 lightSpaceMatrix;

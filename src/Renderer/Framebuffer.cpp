@@ -44,6 +44,7 @@ void Framebuffer::create() {
 	std::vector<GLenum> drawBuffers;
 
 	if (m_depthMode == DepthMode::DepthTexture) {
+		std ::cout << "Creating depth texture for framebuffer" << std::endl;
 		glGenTextures(1, &m_depthTexture);
 		glBindTexture(GL_TEXTURE_2D, m_depthTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0,
