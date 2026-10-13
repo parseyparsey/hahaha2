@@ -77,7 +77,7 @@ void Renderer::renderForward(Scene &scene) {
 		m_debugShader.setMat4("spotLightSpace[" + std::to_string(i) + "]",
 							  m_spotLightSpaceMatrices[i]);
 	}
-	 
+	
 	setLightUniforms(scene);
 
 	for (auto &obj : scene.getObjects()) {
