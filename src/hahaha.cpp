@@ -12,6 +12,7 @@
 #include "Texture.h"
 #include "Scene/Scene.h"
 #include "Input/Input.h"
+#include "plane.h"
 
 Window g_window(800, 600, "hahaha2");
 Scene scene;
@@ -21,6 +22,8 @@ Texture containerDiffuse("textures/container2.png", false,
 						 false);
 Texture containerSpecular("textures/container2_specular.png", false, false);
 Texture whitetxt("textures/white.png", false, false);
+Texture planetxt("textures/wood.png", false, true);
+
 float dt;
 float lasttime;
 
@@ -82,6 +85,15 @@ void confScene() {
 		cube.transform.position = cubePositions[i];
 		//float angle = 20.0f * i;
 	}
+
+	Plane plane(150);
+	placeholderMat.diff = planetxt.ID;
+	placeholderMat.spec = whitetxt.ID;
+	Material &plane_mat = scene.addMaterial(placeholderMat);
+	Mesh &planeMesh = scene.addMesh(plane.vertices, plane.indices);
+
+	GameObject &planeobj = scene.addObject("plane", &planeMesh, &plane_mat);
+	planeobj.transform.position = glm::vec3(-30.0f, -7.0f, -30.0f);
 
 	auto &dl = scene.getDirLight();
 	dl.direction = glm::vec3(0.0f, -1.0f, -0.3f);

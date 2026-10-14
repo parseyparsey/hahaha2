@@ -35,7 +35,8 @@ public:
 	DirLight &getDirLight() { return m_dirLight; }
 	std::vector<SpotLight> &getSpotLight() { return m_spotLight; }
 
-	Mesh &addMesh(const std::vector<Vertex> &verts);
+	Mesh &addMesh(const std::vector<Vertex> &verts,
+				  const std::vector<unsigned int> &indices = {});
 	Material &addMaterial(const Material &mat);
 
 	Camera &getCamera() { return m_camera; }

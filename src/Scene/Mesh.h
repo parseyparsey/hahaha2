@@ -14,7 +14,8 @@ struct Vertex {
 
 class Mesh {
 public:
-	Mesh(const std::vector<Vertex>& vertices);
+	Mesh(const std::vector<Vertex> &vertices,
+		 const std::vector<unsigned int> indices = {});
 	~Mesh();
 
 	Mesh(const Mesh &) = delete;
@@ -25,9 +26,10 @@ public:
 	void draw() const;
 
 private:
-	void setup(const std::vector<Vertex> &vertices);
+	void setup(const std::vector<Vertex> &vertices,
+			   const std::vector<unsigned int> indices = {});
 	void destroy();
 
-	unsigned m_vao = 0, m_vbo = 0;
-	int m_vertexCount = 0;
+	unsigned m_vao = 0, m_vbo = 0, m_ebo = 0;
+	int m_vertexCount = 0, m_indexCount = 0;
 };

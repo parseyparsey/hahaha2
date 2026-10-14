@@ -57,7 +57,7 @@ void Renderer::renderForward(Scene &scene) {
 
 	m_debugShader.use();
 
-	glActiveTexture(GL_TEXTURE4);
+	glActiveTexture(GL_TEXTURE0 + TextureUnit::DirShadowMap);
 	glBindTexture(GL_TEXTURE_2D, m_dirShadowDepthFBO.getDepthAttachment());
 
 	m_debugShader.setMat4("view", view);
@@ -67,7 +67,7 @@ void Renderer::renderForward(Scene &scene) {
 	m_debugShader.setInt("material.texture_specular", TextureUnit::Specular);
 	m_debugShader.setInt("dirShadowMap", TextureUnit::DirShadowMap);
 	m_debugShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
-	m_debugShader.setBool("blinn", true);
+	m_debugShader.setBool("blinn", true); 
 
 	for (int i = 0; i < (int)m_spotLightSpaceMatrices.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + TextureUnit::SpotShadowBase + i);
@@ -75,7 +75,7 @@ void Renderer::renderForward(Scene &scene) {
 		m_debugShader.setInt("spotShadowMap[" + std::to_string(i) + "]",
 							 TextureUnit::SpotShadowBase + i);
 		m_debugShader.setMat4("spotLightSpace[" + std::to_string(i) + "]",
-							  m_spotLightSpaceMatrices[i]);
+							  m_spotLightSpaceMatrices[i]); 
 	}
 	
 	setLightUniforms(scene);
@@ -230,7 +230,8 @@ void Renderer::renderDirShadow(Scene &scene) {
 
 	float near_plane = 1.0f, far_plane = 200.0f; // 7.5f;
 	glm::mat4 lightProjection =
-		glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+		glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 300.0f);
+		//glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
 	glm::vec3 lightDir = glm::normalize(obj.direction);
 	glm::mat4 lightView = glm::lookAt(-lightDir * 20.0f, glm::vec3(0.0f),
 									  glm::vec3(0.0f, 1.0f, 0.0f));
@@ -254,6 +255,17 @@ void Renderer::renderDirShadow(Scene &scene) {
 	Framebuffer::bindDefault();
 	glViewport(0, 0, m_width, m_height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	static bool printed = false;
+	if (!printed) {
+		for (int r = 0; r < 4; r++)
+			std::cout << lightSpaceMatrix[0][r] << " " << lightSpaceMatrix[1][r]
+					  << " " << lightSpaceMatrix[2][r] << " "
+					  << lightSpaceMatrix[3][r] << "\n";
+		std::cout << "dir: " << obj.direction.x << " " << obj.direction.y << " "
+				  << obj.direction.z << "\n";
+		printed = true;
+	}
 }
 
 glm::mat4 Renderer::spotLightSpaceMatrix(SpotLight& sl) {

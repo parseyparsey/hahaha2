@@ -84,11 +84,16 @@ void main() {
         result += calcPointLight(pLights[i], norm, FragPos, viewDir, TexCoords);
 
     for(int i = 0; i < sl_num; i++){
-        float shadow = calcSpotShadow(i, FragPos, norm, normalize(spotlight[i].position - FragPos));
+        //float shadow = calcSpotShadow(i, FragPos, norm, normalize(spotlight[i].position - FragPos));
+        float shadow = (i < sl_num)
+            ? calcSpotShadow(i, FragPos, norm, normalize(spotlight[i].position - FragPos))
+            : 0.0;
         result += calcSpotLight(spotlight[i], norm, FragPos, viewDir, TexCoords, shadow);
     }
 
     FragColor = vec4(result, 1.0);
+    //vec3 pc = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
+    //FragColor = vec4(pc.xy, 0.0, 1.0);    //
 }
 
 vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords){

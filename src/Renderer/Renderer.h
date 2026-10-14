@@ -27,6 +27,9 @@ private:
 
 	int m_height, m_width;
 
+	static constexpr int m_dirShadowMapSize = 2048;
+	static constexpr int m_spotShadowMapSize = 1024;
+
 	Framebuffer m_dirShadowDepthFBO;
 	Framebuffer m_resolveFBO;
 	Framebuffer m_brightFBO;
@@ -50,9 +53,6 @@ private:
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
 	bool m_bloomEnabled = false;
-
-	int m_dirShadowMapSize = 2048;
-	int m_spotShadowMapSize = 1024;
 
 	static constexpr int MAX_SPOT_LIGHTS = 4;
 

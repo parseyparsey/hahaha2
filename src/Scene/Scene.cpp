@@ -9,8 +9,9 @@ GameObject &Scene::addObject(char const *objName, Mesh *mesh, Material *material
 	return m_objects.back();
 }
 
-Mesh &Scene::addMesh(const std::vector<Vertex> &verts) {
-	m_meshes.push_back(std::make_unique<Mesh>(verts));
+Mesh &Scene::addMesh(const std::vector<Vertex> &verts,
+					 const std::vector<unsigned int> &indices) {
+	m_meshes.push_back(std::make_unique<Mesh>(verts, indices));
 	return *m_meshes.back();
 }
 

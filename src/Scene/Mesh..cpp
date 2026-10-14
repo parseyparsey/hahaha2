@@ -1,7 +1,10 @@
 #include "Mesh.h"
 #include <utility>
 
-Mesh::Mesh(const std::vector<Vertex> &vertices) { setup(vertices); }
+Mesh::Mesh(const std::vector<Vertex> &vertices,
+		   const std::vector<unsigned int> indices) {
+	setup(vertices, indices);
+}
 
 Mesh::~Mesh() { destroy(); }
 
@@ -19,8 +22,10 @@ Mesh &Mesh::operator=(Mesh &&other) noexcept {
 	return *this;
 }
 
-void Mesh::setup(const std::vector<Vertex> &vertices) {
+void Mesh::setup(const std::vector<Vertex> &vertices,
+				 const std::vector<unsigned int> indices) {
 	m_vertexCount = (int)vertices.size();
+	m_indexCount = (int)indices.size();
 
 	glGenVertexArrays(1, &m_vao);
 	glGenBuffers(1, &m_vbo);
@@ -50,6 +55,13 @@ void Mesh::setup(const std::vector<Vertex> &vertices) {
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
 						  (void *)offsetof(Vertex, bitangent));
 
+	if (!indices.empty()) {
+		glGenBuffers(1, &m_ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
+					 indices.data(), GL_STATIC_DRAW);
+	}
+
 	glBindVertexArray(0);
 }
 
@@ -63,6 +75,11 @@ void Mesh::destroy() {
 
 void Mesh::draw() const {
 	glBindVertexArray(m_vao);
-	glDrawArrays(GL_TRIANGLES, 0, m_vertexCount);
+	
+	if (m_indexCount > 0)
+		glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, 0);
+	else
+		glDrawArrays(GL_TRIANGLES, 0, m_vertexCount);
+	
 	glBindVertexArray(0);
 }
