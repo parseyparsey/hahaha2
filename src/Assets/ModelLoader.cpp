@@ -25,7 +25,7 @@ bool ModelLoader::import(const std::string &path, ModelData &out) {
 	const aiScene *scene = importer.ReadFile(
 		path, aiProcess_Triangulate | aiProcess_GenSmoothNormals |
 		aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices);
-	if (!scene || (scene->mFlags && AI_SCENE_FLAGS_INCOMPLETE) ||
+	if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) ||
 		!scene->mRootNode) {
 		std::cerr << "Assimp::" << importer.GetErrorString() << std::endl;
 		return false;
@@ -79,7 +79,7 @@ bool ModelLoader::import(const std::string &path, ModelData &out) {
 	return true;
 }
 
-bool ModelLoader::instantiate(Scene& scene, const ModelData& data,
+void ModelLoader::instantiate(Scene& scene, const ModelData& data,
 	TextureCache& textures, const std::string& name)
 {
 	std::vector<Material *> mats;
@@ -118,6 +118,8 @@ static bool readStr(std::istream &in, std::string &s) {
 	s.resize(n);
 	return (bool)in.read(s.data(), n);
 }
+
+//static_assert(std::is_trivially_copyable_v<Vertex>);
 
 bool ModelLoader::writeBinary(const std::string& file, ModelData& data) {
 	std::ofstream o(file, std::ios::binary);
@@ -158,7 +160,7 @@ bool ModelLoader::readBinary(const std::string& file, ModelData& out) {
 	char magic[4];
 	uint32_t hdr[4];
 
-	if (!in.read(magic, 4) || std::memcpy(magic, "H32M", 4) != 0)
+	if (!in.read(magic, 4) || std::memcmp(magic, "H32M", 4) != 0)
 		return false;
 	if (!in.read((char *)hdr, sizeof(hdr)) || hdr[0] != 1 ||
 		hdr[1] != sizeof(Vertex))

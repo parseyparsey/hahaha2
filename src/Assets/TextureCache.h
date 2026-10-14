@@ -7,7 +7,7 @@
 
 class TextureCache {
 public:
-	unsigned int get(const std::string& path, bool srgb) {
+	unsigned int get(const std::string &path, bool srgb) {
 		std::string key = path + (srgb ? "#srgb" : "#lin");
 		auto it = m_cache.find(key);
 		if (it != m_cache.end())
@@ -23,4 +23,4 @@ public:
 
 private:
 	std::unordered_map<std::string, std::unique_ptr<Texture>> m_cache;
-}
+};

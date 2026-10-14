@@ -10,7 +10,7 @@ class ModelLoader {
 public:
 	static bool load(const std::string &path, ModelData &out);
 
-	static bool instantiate(Scene& scene, const ModelData &data, 
+	static void instantiate(Scene& scene, const ModelData &data, 
 		TextureCache& textures, const std::string& name);
 
 private:

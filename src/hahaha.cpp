@@ -12,9 +12,12 @@
 #include "Texture.h"
 #include "Scene/Scene.h"
 #include "Input/Input.h"
+#include "Assets/ModelLoader.h"
+#include "Assets/TextureCache.h"
 #include "plane.h"
 
 Window g_window(800, 600, "hahaha2");
+TextureCache textures;
 Scene scene;
 Renderer renderer(800, 600);
 
@@ -85,6 +88,10 @@ void confScene() {
 		cube.transform.position = cubePositions[i];
 		//float angle = 20.0f * i;
 	}
+
+	ModelData backpackData;
+	if (ModelLoader::load("models/backpack/backpack.obj", backpackData))
+		ModelLoader::instantiate(scene, backpackData, textures, "backpack");
 
 	Plane plane(150);
 	placeholderMat.diff = planetxt.ID;
