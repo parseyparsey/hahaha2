@@ -3,3 +3,8 @@ Debug/
 .vs/
 *.user
 CMakeSettings.json
+
+# Simple Tab Saver VS extension saved tab layouts directory
+.tablayouts/
+.tablayouts/.backups/
+.tablayouts/.personal/
