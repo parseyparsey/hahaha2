@@ -31,6 +31,7 @@ Window::Window(int width, int height, const char *title) :
 	glfwSetWindowUserPointer(m_handle, this);
 	glfwSetFramebufferSizeCallback(m_handle, framebufferSizeCallback);
 	glfwSetCursorPosCallback(m_handle, cursorPosCallback);
+	glfwSwapInterval(1);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
