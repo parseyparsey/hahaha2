@@ -12,6 +12,7 @@ struct PointLight {
 	glm::vec3 position;
 	float constant = 1.0f, linear = 0.09f, quadratic = 0.032f;
 	glm::vec3 ambient, diffuse, specular;
+	bool castShadows = false;
 };
 
 struct DirLight {
