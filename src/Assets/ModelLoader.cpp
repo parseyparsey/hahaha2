@@ -79,25 +79,32 @@ bool ModelLoader::import(const std::string &path, ModelData &out) {
 	return true;
 }
 
-void ModelLoader::instantiate(Scene& scene, const ModelData& data,
-	TextureCache& textures, const std::string& name)
+std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data,
+	TextureCache& textures, const std::string& name, const TextureFlips& flips)
 {
 	std::vector<Material *> mats;
 
 	for (auto &md : data.materials) {
 		Material m{};
 		if (!md.diffPath.empty())
-			m.diff = textures.get(data.directory + "/" + md.diffPath, true);
+			m.diff = textures.get(data.directory + "/" + md.diffPath, true, flips.diffuse);
 		if (!md.specPath.empty())
-			m.spec = textures.get(data.directory + "/" + md.specPath, false);
+			m.spec = textures.get(data.directory + "/" + md.specPath, false, flips.specular);
 		m.shininess = md.shininess;
 		mats.push_back(&scene.addMaterial(m));
 	}
 
+	std::vector<size_t> ids;
+	int n = 0;
+
 	for (auto &sm : data.meshes) {
 		Mesh& mesh = scene.addMesh(sm.vertices, sm.indices);
-		scene.addObject(name.c_str(), &mesh, mats[sm.materialIndex]);
+		scene.addObject((name + "_" + std::to_string(n++)).c_str(), &mesh,
+						mats[sm.materialIndex]);
+		ids.push_back(scene.getObjects().size() - 1);
 	}
+
+	return ids;
 }
 
 //HERE IS THE FORMAT

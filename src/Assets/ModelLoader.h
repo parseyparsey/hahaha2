@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "ModelData.h"
 
 class Scene;
@@ -10,8 +11,8 @@ class ModelLoader {
 public:
 	static bool load(const std::string &path, ModelData &out);
 
-	static void instantiate(Scene& scene, const ModelData &data, 
-		TextureCache& textures, const std::string& name);
+	static std::vector<size_t> instantiate(Scene& scene, const ModelData &data, 
+		TextureCache& textures, const std::string& name, const TextureFlips& flips = {});
 
 private:
 	static bool import(const std::string &path, ModelData &out);

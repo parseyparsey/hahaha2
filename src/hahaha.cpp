@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <Core/Window.h>
+#include <vector>
 #include "Renderer/Renderer.h"
 #include "Texture.h"
 #include "Scene/Scene.h"
@@ -25,7 +26,8 @@ Texture containerDiffuse("textures/container2.png", false,
 						 false);
 Texture containerSpecular("textures/container2_specular.png", false, false);
 Texture whitetxt("textures/white.png", false, false);
-Texture planetxt("textures/wood.png", false, true);
+Texture planetxt("textures/wood.png", false, false);
+Texture naotxt("textures/nao_cropped.jpg", true, false, 1);
 
 float dt;
 float lasttime;
@@ -89,9 +91,22 @@ void confScene() {
 		//float angle = 20.0f * i;
 	}
 
+	placeholderMat.diff = naotxt.ID;
+	placeholderMat.spec = 0;
+	Material &naomat = scene.addMaterial(placeholderMat);
+	GameObject &naocube = scene.addObject("naocube", &cubeMesh, &naomat);
+	naocube.transform.position = glm::vec3(0.0f, 0.0f, -10.0f);
+
 	ModelData backpackData;
-	if (ModelLoader::load("models/backpack/backpack.obj", backpackData))
-		ModelLoader::instantiate(scene, backpackData, textures, "backpack");
+	ModelLoader::load("models/backpack/backpack.obj", backpackData);
+	auto backpack =
+		ModelLoader::instantiate(scene, backpackData, textures, "backpack", {false, true, false});
+
+	for (size_t i : backpack) {
+		auto &t = scene.getObjects()[i].transform;
+		t.position = glm::vec3(-6.0f, 1.0f, -6.0f);
+		t.scale = glm::vec3(0.6f, 0.6f, 0.6f);
+	}
 
 	Plane plane(150);
 	placeholderMat.diff = planetxt.ID;

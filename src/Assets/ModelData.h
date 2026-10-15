@@ -20,3 +20,9 @@ struct ModelData {
 	std::vector<SubMeshData> meshes;
 	std::vector<MaterialData> materials;
 };
+
+struct TextureFlips {
+	bool diffuse = true;
+	bool specular = true;
+	bool normal = true;
+};
