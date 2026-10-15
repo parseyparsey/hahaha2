@@ -87,7 +87,7 @@ std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data
 	for (auto &md : data.materials) {
 		Material m{};
 		if (!md.diffPath.empty())
-			m.diff = textures.get(data.directory + "/" + md.diffPath, true, flips.diffuse);
+			m.diff = textures.get(data.directory + "/" + md.diffPath, false, flips.diffuse);
 		if (!md.specPath.empty())
 			m.spec = textures.get(data.directory + "/" + md.specPath, false, flips.specular);
 		m.shininess = md.shininess;
@@ -212,11 +212,16 @@ bool ModelLoader::load(const std::string &path, ModelData &out) {
 
 	if (fs::exists(cache) &&
 		fs::last_write_time(cache) >= fs::last_write_time(path) &&
-		readBinary(cache, out))
+		readBinary(cache, out)) 
+	{
+		std::cout << "MODEL::" << path << "::H32M_FOUND!\n";
 		return true;
+	}
 
 	out = ModelData{ out.directory, {}, {} };
 	
+	std::cout << "MODEL::" << path << "::H32M_NOT_FOUND!\n";
+
 	if (!import(path, out))
 		return false;
 
