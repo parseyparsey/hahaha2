@@ -217,8 +217,10 @@ bool ModelLoader::load(const std::string &path, ModelData &out) {
 		std::cout << "MODEL::" << path << "::H32M_FOUND!\n";
 		return true;
 	}
-
-	out = ModelData{ out.directory, {}, {} };
+	
+	std::string dir = out.directory;
+	out = ModelData{dir, {}, {}};
+	//out = ModelData{ out.directory, {}, {} };
 	
 	std::cout << "MODEL::" << path << "::H32M_NOT_FOUND!\n";
 

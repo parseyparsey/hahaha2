@@ -18,9 +18,9 @@
 #include "plane.h"
 
 Window g_window(800, 600, "hahaha2");
+Renderer renderer(800, 600);
 TextureCache textures;
 Scene scene;
-Renderer renderer(800, 600);
 
 Texture containerDiffuse("textures/container2.png", false,
 						 false);
