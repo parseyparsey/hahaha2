@@ -126,7 +126,7 @@ static bool readStr(std::istream &in, std::string &s) {
 	return (bool)in.read(s.data(), n);
 }
 
-//static_assert(std::is_trivially_copyable_v<Vertex>);
+static_assert(std::is_trivially_copyable_v<Vertex>);
 
 bool ModelLoader::writeBinary(const std::string& file, ModelData& data) {
 	std::ofstream o(file, std::ios::binary);

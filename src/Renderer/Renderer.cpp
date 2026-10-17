@@ -3,6 +3,7 @@
 Renderer::Renderer(int width, int height) :
 	m_width(width),
 	m_height(height),
+	m_skyboxMesh(h32rf::makeSkyboxVertices(), std::vector<unsigned int>{}),
 	m_resolveFBO(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}},
 				 DepthMode::Depth),
 	m_dirShadowDepthFBO(m_dirShadowMapSize, m_dirShadowMapSize, 
@@ -15,11 +16,12 @@ Renderer::Renderer(int width, int height) :
 	m_brightPassShader("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs"),
 	m_blurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs"),
 	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs"),
-	m_debugShader("shaders/debugshader1.vs", "shaders/debugshader1.fs"),
-	m_dirShadowDepthShader("shaders/depth_shader.vs", "shaders/depth_shader.fs")
+	m_debugShader("shaders/h32_debugshader1.vs", "shaders/h32_debugshader1.fs"),
+	m_dirShadowDepthShader("shaders/h32_depth_shader.vs", "shaders/h32_depth_shader.fs"),
+	m_skyboxShader("shaders/h32_skybox.vs", "shaders/h32_skybox.fs") 
 {
 	initQuad();
-
+	
 	for (int i = 0; i < MAX_SPOT_LIGHTS; i++)
 		m_spotShadowDepthFBO.emplace_back(m_spotShadowMapSize, m_spotShadowMapSize,
 									 std::vector<AttachmentSpec>{},
@@ -90,6 +92,8 @@ void Renderer::renderForward(Scene &scene) {
 		}
 		obj.mesh->draw();
 	}
+
+	renderSkybox(scene);
 }
 
 void Renderer::bindMaterial(const Material &mat) {
@@ -305,4 +309,31 @@ void Renderer::renderSpotShadow(Scene &scene) {
 
 	Framebuffer::bindDefault();
 	glViewport(0, 0, m_width, m_height);
+}
+
+void Renderer::renderSkybox(Scene &scene) {
+	unsigned int cubemap = scene.getSkybox().cubemap;
+
+	if (!cubemap)
+		return;
+
+	auto &cam = scene.getCamera();
+
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_FALSE);
+
+	m_skyboxShader.use();
+	m_skyboxShader.setMat4(
+		"view", glm::mat4(glm::mat3(cam.getViewMatrix())));
+	m_skyboxShader.setMat4("projection",
+						   cam.getProjectionMatrix((float)m_width / m_height));
+
+	glActiveTexture(GL_TEXTURE0 + TextureUnit::SkyboxMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
+
+	m_skyboxShader.setInt("skybox", TextureUnit::SkyboxMap);
+	m_skyboxMesh.draw();
+
+	glDepthMask(GL_TRUE);
+	glDepthFunc(GL_LESS);
 }

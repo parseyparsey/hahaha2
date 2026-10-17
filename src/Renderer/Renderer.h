@@ -8,6 +8,7 @@
 #include "Framebuffer.h"
 #include "shader.h"
 #include "Scene/Scene.h"
+#include "h32r_func.h"
 
 class Renderer {
 public:
@@ -24,11 +25,12 @@ private:
 	void postFX();
 	void bindMaterial(const Material &material);
 	void setLightUniforms(Scene &scene);
+	void renderSkybox(Scene &scene);
 
 	int m_height, m_width;
 
-	static constexpr int m_dirShadowMapSize = 2048;
-	static constexpr int m_spotShadowMapSize = 1024;
+	static constexpr int m_dirShadowMapSize = 4096;
+	static constexpr int m_spotShadowMapSize = 2048;
 
 	Framebuffer m_dirShadowDepthFBO;
 	Framebuffer m_resolveFBO;
@@ -44,6 +46,7 @@ private:
 	Shader m_postFXShader;
 	Shader m_debugShader;
 	Shader m_dirShadowDepthShader;
+	Shader m_skyboxShader;
 
 	unsigned int m_quadVAO = 0, m_quadVBO = 0;
 	void initQuad();
@@ -56,6 +59,8 @@ private:
 
 	static constexpr int MAX_SPOT_LIGHTS = 4;
 
+	Mesh m_skyboxMesh;
+
 	enum TextureUnit {
 		Diffuse = 0,
 		Specular = 1,
@@ -63,7 +68,8 @@ private:
 		PointShadowMap = 5,
 		NormalMap = 7,
 		ParallaxMap = 8,
-		SpotShadowBase = 9
+		SpotShadowBase = 9,
+		SkyboxMap = 13
 	};
 
 	glm::mat4 lightSpaceMatrix;

@@ -27,6 +27,10 @@ struct SpotLight {
 	float constant = 1.0f, linear = 0.0f, quadratic = 0.0f;
 };
 
+struct Skybox {
+	unsigned int cubemap = 0;
+};
+
 class Scene {
 public:
 	GameObject &addObject(char const *objName, Mesh *mesh, Material *material);
@@ -41,6 +45,7 @@ public:
 	Material &addMaterial(const Material &mat);
 
 	Camera &getCamera() { return m_camera; }
+	Skybox &getSkybox() { return m_skybox; }
 
 private:
 	std::vector<GameObject> m_objects;
@@ -50,6 +55,8 @@ private:
 
 	std::vector<std::unique_ptr<Material>> m_materials;
 	std::vector<std::unique_ptr<Mesh>> m_meshes;
+
+	Skybox m_skybox;
 
 	Camera m_camera;
 };

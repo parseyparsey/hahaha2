@@ -10,7 +10,7 @@
 #include <Core/Window.h>
 #include <vector>
 #include "Renderer/Renderer.h"
-#include "Texture.h"
+#include "texture.h" 
 #include "Scene/Scene.h"
 #include "Input/Input.h"
 #include "Assets/ModelLoader.h"
@@ -28,6 +28,7 @@ Texture containerSpecular("textures/container2_specular.png", false, false);
 Texture whitetxt("textures/white.png", false, false);
 Texture planetxt("textures/wood.png", false, false);
 Texture naotxt("textures/nao_cropped.jpg", true, false, 1);
+Texture naotxt1("textures/nao08.jpg", true, false, 1);
 
 float dt;
 float lasttime;
@@ -67,7 +68,7 @@ int main() {
 }
 
 void confScene() { 
-	Mesh &cubeMesh = scene.addMesh(makeCubeVertices());
+	Mesh &cubeMesh = scene.addMesh(h32rf::makeCubeVertices());
 
 	Material placeholderMat{};
 	placeholderMat.diff = containerDiffuse.ID;
@@ -97,6 +98,14 @@ void confScene() {
 	GameObject &naocube = scene.addObject("naocube", &cubeMesh, &naomat);
 	naocube.transform.position = glm::vec3(0.0f, 0.0f, -10.0f);
 
+	placeholderMat.diff = naotxt1.ID;
+	placeholderMat.spec = 0;
+	Material &naomat1 = scene.addMaterial(placeholderMat);
+	GameObject &naocube1 = scene.addObject("naocube1", &cubeMesh, &naomat1);
+	naocube1.transform.position = glm::vec3(5.0f, 2.0f, -8.0f);
+	naocube1.transform.scale = glm::vec3(1.216f, 1.0f, 1.0f);
+	naocube1.transform.rotation = glm::vec3(0.0f, -45.0f, 0.0f);
+
 	ModelData backpackData;
 	ModelLoader::load("models/backpack/backpack.obj", backpackData);
 	auto backpack =
@@ -116,6 +125,17 @@ void confScene() {
 
 	GameObject &planeobj = scene.addObject("plane", &planeMesh, &plane_mat);
 	planeobj.transform.position = glm::vec3(-30.0f, -7.0f, -30.0f);
+
+	std::vector<std::string> faces{
+		"textures/skybox01/right.jpg", "textures/skybox01/left.jpg",
+		"textures/skybox01/top.jpg",   "textures/skybox01/bottom.jpg",
+		"textures/skybox01/front.jpg", "textures/skybox01/back.jpg"
+	};
+
+	unsigned int cubemap = h32rf::loadCubemap(faces);
+
+	Skybox &skyobj = scene.getSkybox();
+	skyobj.cubemap = cubemap;
 
 	auto &dl = scene.getDirLight();
 	dl.direction = glm::vec3(0.0f, -1.0f, -0.3f);
@@ -191,56 +211,3 @@ void updateMyScene() {
 	}
 }
 
-std::vector<Vertex> makeCubeVertices() {
-	// position, normal, texcoord — tangent/bitangent zeroed (unused without
-	// normal mapping)
-	float raw[] = {
-		// positions          // normals           // texcoords
-		-0.5f, -0.5f, -0.5f, 0.0f,	0.0f,  -1.0f, 0.0f,	 0.0f,	0.5f,  -0.5f,
-		-0.5f, 0.0f,  0.0f,	 -1.0f, 1.0f,  0.0f,  0.5f,	 0.5f,	-0.5f, 0.0f,
-		0.0f,  -1.0f, 1.0f,	 1.0f,	0.5f,  0.5f,  -0.5f, 0.0f,	0.0f,  -1.0f,
-		1.0f,  1.0f,  -0.5f, 0.5f,	-0.5f, 0.0f,  0.0f,	 -1.0f, 0.0f,  1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f,	0.0f,  -1.0f, 0.0f,	 0.0f,
-
-		-0.5f, -0.5f, 0.5f,	 0.0f,	0.0f,  1.0f,  0.0f,	 0.0f,	0.5f,  -0.5f,
-		0.5f,  0.0f,  0.0f,	 1.0f,	1.0f,  0.0f,  0.5f,	 0.5f,	0.5f,  0.0f,
-		0.0f,  1.0f,  1.0f,	 1.0f,	0.5f,  0.5f,  0.5f,	 0.0f,	0.0f,  1.0f,
-		1.0f,  1.0f,  -0.5f, 0.5f,	0.5f,  0.0f,  0.0f,	 1.0f,	0.0f,  1.0f,
-		-0.5f, -0.5f, 0.5f,	 0.0f,	0.0f,  1.0f,  0.0f,	 0.0f,
-
-		-0.5f, 0.5f,  0.5f,	 -1.0f, 0.0f,  0.0f,  1.0f,	 0.0f,	-0.5f, 0.5f,
-		-0.5f, -1.0f, 0.0f,	 0.0f,	1.0f,  1.0f,  -0.5f, -0.5f, -0.5f, -1.0f,
-		0.0f,  0.0f,  0.0f,	 1.0f,	-0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,
-		0.0f,  1.0f,  -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,	 0.0f,	0.0f,  0.0f,
-		-0.5f, 0.5f,  0.5f,	 -1.0f, 0.0f,  0.0f,  1.0f,	 0.0f,
-
-		0.5f,  0.5f,  0.5f,	 1.0f,	0.0f,  0.0f,  1.0f,	 0.0f,	0.5f,  0.5f,
-		-0.5f, 1.0f,  0.0f,	 0.0f,	1.0f,  1.0f,  0.5f,	 -0.5f, -0.5f, 1.0f,
-		0.0f,  0.0f,  0.0f,	 1.0f,	0.5f,  -0.5f, -0.5f, 1.0f,	0.0f,  0.0f,
-		0.0f,  1.0f,  0.5f,	 -0.5f, 0.5f,  1.0f,  0.0f,	 0.0f,	0.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,	 1.0f,	0.0f,  0.0f,  1.0f,	 0.0f,
-
-		-0.5f, -0.5f, -0.5f, 0.0f,	-1.0f, 0.0f,  0.0f,	 1.0f,	0.5f,  -0.5f,
-		-0.5f, 0.0f,  -1.0f, 0.0f,	1.0f,  1.0f,  0.5f,	 -0.5f, 0.5f,  0.0f,
-		-1.0f, 0.0f,  1.0f,	 0.0f,	0.5f,  -0.5f, 0.5f,	 0.0f,	-1.0f, 0.0f,
-		1.0f,  0.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,	0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f,	-1.0f, 0.0f,  0.0f,	 1.0f,
-
-		-0.5f, 0.5f,  -0.5f, 0.0f,	1.0f,  0.0f,  0.0f,	 1.0f,	0.5f,  0.5f,
-		-0.5f, 0.0f,  1.0f,	 0.0f,	1.0f,  1.0f,  0.5f,	 0.5f,	0.5f,  0.0f,
-		1.0f,  0.0f,  1.0f,	 0.0f,	0.5f,  0.5f,  0.5f,	 0.0f,	1.0f,  0.0f,
-		1.0f,  0.0f,  -0.5f, 0.5f,	0.5f,  0.0f,  1.0f,	 0.0f,	0.0f,  0.0f,
-		-0.5f, 0.5f,  -0.5f, 0.0f,	1.0f,  0.0f,  0.0f,	 1.0f};
-
-	std::vector<Vertex> verts;
-	for (int i = 0; i < 36; i++) {
-		Vertex v{};
-		v.position = glm::vec3(raw[i * 8 + 0], raw[i * 8 + 1], raw[i * 8 + 2]);
-		v.normal = glm::vec3(raw[i * 8 + 3], raw[i * 8 + 4], raw[i * 8 + 5]);
-		v.texCoords = glm::vec2(raw[i * 8 + 6], raw[i * 8 + 7]);
-		v.tangent = glm::vec3(0.0f);
-		v.bitangent = glm::vec3(0.0f);
-		verts.push_back(v);
-	}
-	return verts;
-}
