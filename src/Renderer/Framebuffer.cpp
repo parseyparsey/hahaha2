@@ -59,6 +59,26 @@ void Framebuffer::create() {
 							   GL_TEXTURE_2D, m_depthTexture, 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
+	} else if (m_depthMode == DepthMode::DepthCubemap) {
+		glGenTextures(1, &m_depthTexture);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_depthTexture);
+		for (unsigned int i = 0; i < 6; ++i)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+						 GL_DEPTH_COMPONENT, m_width, m_height, 0,
+						 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,
+						GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T,
+						GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,
+						GL_CLAMP_TO_EDGE);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+							 m_depthTexture, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	} else {
 		for (size_t i = 0; i < m_colorTextures.size(); ++i) {
 			const auto &spec = m_specs[i];

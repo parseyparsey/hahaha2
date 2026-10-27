@@ -15,7 +15,8 @@ enum class DepthMode {
 	None,
 	Depth,
 	DepthStencil,
-	DepthTexture
+	DepthTexture,
+	DepthCubemap
 };
 
 class Framebuffer {

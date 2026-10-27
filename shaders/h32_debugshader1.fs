@@ -4,6 +4,7 @@ out vec4 FragColor;
 #define MAX_POINT_LIGHTS 16
 #define MAX_SPOT_LIGHTS 16  
 
+
 struct Material{
     sampler2D texture_diffuse;
     sampler2D texture_specular;
@@ -67,11 +68,17 @@ uniform sampler2D dirShadowMap;
 uniform sampler2D spotShadowMap[MAX_SPOT_SHADOWS];
 uniform mat4 spotLightSpace[MAX_SPOT_SHADOWS];
 
+#define MAX_POINT_SHADOWS 2
+uniform samplerCube pointShadowMap[MAX_POINT_SHADOWS];
+uniform int pointShadowCount;
+uniform float pointFarPlane;
+
 vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords);
-vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords);
+vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords, float shadow);
 vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords, float shadow);
 float calcDirShadow(vec4 fragPosLightSpace, dirLight light);
 float calcSpotShadow(int i, vec3 fragPos, vec3 normal,vec3 lightDir);
+float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal);
 
 void main() {
     vec3 norm = normalize(Normal);
@@ -80,8 +87,12 @@ void main() {
 
     result = calcDirLight(dirlight, norm, viewDir, TexCoords);
 
-    for(int i = 0; i < pl_num; i++)
-        result += calcPointLight(pLights[i], norm, FragPos, viewDir, TexCoords);
+    for(int i = 0; i < pl_num; i++) {
+        float shadow = (i < pointShadowCount)
+            ? CalcPointShadow(i, FragPos, pLights[i].position, Normal)
+            : 0.0;
+        result += calcPointLight(pLights[i], norm, FragPos, viewDir, TexCoords, shadow);
+    }
 
     for(int i = 0; i < sl_num; i++){
         //float shadow = calcSpotShadow(i, FragPos, norm, normalize(spotlight[i].position - FragPos));
@@ -124,7 +135,7 @@ vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords){
     //vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;  
 }
 
-vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords){
+vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords, float shadow){
     vec3 lightDir = normalize(light.position - fragPos);
     //diffuse
     float diff = max(dot(normal, lightDir), 0.0);
@@ -162,7 +173,8 @@ vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     else
         return (ambient + diffuse + specular);*/
     
-    return (ambient + diffuse + specular);
+    return ambient + (1.0 - shadow) * (diffuse + specular);
+    //return (ambient + diffuse + specular);
 }
 
 vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords, float shadow){
@@ -248,4 +260,42 @@ float calcSpotShadow(int i, vec3 fragPos, vec3 normal,vec3 lightDir){
             shadow += (proj.z - bias > d) ? 1.0 : 0.0;
         }
     return shadow / 9.0;
+}
+
+vec3 sampleOffsetDirections[20] = vec3[]
+(
+    vec3( 1, 1, 1), vec3( 1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1),
+    vec3( 1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+    vec3( 1, 1, 0), vec3( 1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+    vec3( 1, 0, 1), vec3(-1, 0, 1), vec3( 1, 0, -1), vec3(-1, 0, -1),
+    vec3( 0, 1, 1), vec3( 0, -1, 1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
+float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal) {
+    vec3 fragToLight = fragPos - lightPos;
+    float currentDepth = length(fragToLight);
+    if (currentDepth > pointFarPlane) return 0.0;
+
+    float shadow = 0.0;
+
+    vec3 norm = normalize(normal);
+    vec3 lightDir = normalize(lightPos - fragPos);
+    float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
+    //float bias = 0.15;
+    
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / pointFarPlane)) / 25.0;
+
+    for(int j = 0; j < samples; ++j)
+    {
+        float closestDepth = texture(pointShadowMap[i], fragToLight + sampleOffsetDirections[j] * diskRadius).r;
+        closestDepth *= pointFarPlane;
+        if (currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+
+    shadow /= float(samples);
+
+    return shadow;
 }

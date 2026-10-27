@@ -21,16 +21,23 @@ Renderer::Renderer(int width, int height) :
 	m_dirShadowDepthShader("shaders/h32_depth_shader.vs", "shaders/h32_depth_shader.fs"),
 	m_skyboxShader("shaders/h32_skybox.vs", "shaders/h32_skybox.fs"),
 	m_unlitShader("shaders/h32_unlit.vs", "shaders/h32_unlit.fs"),
-	m_fxaaShader("shaders/framebuffer.vs", "shaders/h32_fxaa.fs")
+	m_fxaaShader("shaders/framebuffer.vs", "shaders/h32_fxaa.fs"),
+	m_pointShadowDepthShader("shaders/h32_pshadow_depth.vs",
+							 "shaders/h32_pshadow_depth.fs","shaders/h32_pshadow_depth.gs")
 {
-	initQuad(); 
+	initQuad();
 	
 	for (int i = 0; i < MAX_SPOT_LIGHTS; i++)
 		m_spotShadowDepthFBO.emplace_back(m_spotShadowMapSize, m_spotShadowMapSize,
 									 std::vector<AttachmentSpec>{},
 									 DepthMode::DepthTexture);
+
+	for (int i = 0; i < MAX_POINT_SHADOW; i++)
+		m_pointShadowFBO.emplace_back(
+			m_pointShadowMapSize, m_pointShadowMapSize,
+			std::vector<AttachmentSpec>{}, DepthMode::DepthCubemap);
 }
- 
+
 void Renderer::resize(int width, int height) {
 	m_width = width;
 	m_height = height;
@@ -43,6 +50,7 @@ void Renderer::resize(int width, int height) {
 
 void Renderer::render(Scene &scene) {
 	renderDirShadow(scene);
+	renderPointShadow(scene);
 	renderSpotShadow(scene);
 	renderForward(scene);
 	if (m_bloomEnabled)
@@ -86,6 +94,17 @@ void Renderer::renderForward(Scene &scene) {
 		m_debugShader.setMat4("spotLightSpace[" + std::to_string(i) + "]",
 							  m_spotLightSpaceMatrices[i]); 
 	}
+
+	for (int i = 0; i < MAX_POINT_SHADOW; i++) {
+		m_debugShader.setInt("pointShadowMap[" + std::to_string(i) + "]", 
+			TextureUnit::PointShadowMap + i);
+		if (i < m_pointShadowCount) {
+			glActiveTexture(GL_TEXTURE0 + TextureUnit::PointShadowMap + i);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_pointShadowFBO[i].getDepthAttachment());
+		}
+	}
+	m_debugShader.setInt("pointShadowCount", m_pointShadowCount);
+	m_debugShader.setFloat("pointFarPlane", m_pointFarPlane);
 	
 	setLightUniforms(scene);
 
@@ -371,4 +390,49 @@ void Renderer::renderSkybox(Scene &scene) {
 
 	glDepthMask(GL_TRUE);
 	glDepthFunc(GL_LESS);
+}
+
+void Renderer::renderPointShadow(Scene &scene) {
+	auto &lights = scene.getPointLights();
+	int n = std::min((int)lights.size(), MAX_POINT_SHADOW);
+
+	const float nearplane = 0.1f, farplane = m_pointFarPlane;
+	glm::mat4 proj =
+		glm::perspective(glm::radians(90.0f), 1.0f, nearplane, farplane);
+
+	m_pointShadowDepthShader.use();
+	glViewport(0, 0, m_pointShadowMapSize, m_pointShadowMapSize);
+	glEnable(GL_DEPTH_TEST); 
+
+	for (int i = 0; i < n; i++) {
+		glm::vec3 p = lights[i].position;
+		glm::mat4 t[6] = {
+			proj * glm::lookAt(p, p + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
+			proj * glm::lookAt(p, p + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
+			proj * glm::lookAt(p, p + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
+			proj * glm::lookAt(p, p + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
+			proj * glm::lookAt(p, p + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
+			proj * glm::lookAt(p, p + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))
+		};
+
+		for (int k = 0; k < 6; k++)
+			m_pointShadowDepthShader.setMat4(
+				"shadowMatrices[" + std::to_string(k) + "]", t[k]);
+
+		m_pointShadowDepthShader.setVec3("lightPos", p);
+		m_pointShadowDepthShader.setFloat("far_plane", farplane);
+
+		m_pointShadowFBO[i].bind();
+		glClear(GL_DEPTH_BUFFER_BIT);
+		for (auto &obj : scene.getObjects()) {
+			if (!obj.active || !obj.mesh)
+				continue;
+			m_pointShadowDepthShader.setMat4("model", obj.getModelMatrix());
+			obj.mesh->draw();
+		}
+	}
+
+	m_pointShadowCount = n;
+	Framebuffer::bindDefault();
+	glViewport(0, 0, m_width, m_height);
 }

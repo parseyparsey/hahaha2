@@ -19,6 +19,7 @@ public:
 private:
 	void renderForward(Scene &scene);
 	void renderDirShadow(Scene &scene);
+	void renderPointShadow(Scene &scene);
 	void renderSpotShadow(Scene &scene);
 	glm::mat4 spotLightSpaceMatrix(SpotLight &sl);
 	void bloom();
@@ -30,13 +31,19 @@ private:
 	int m_height, m_width;
 
 	static constexpr int m_dirShadowMapSize = 4096;
+	static constexpr int m_pointShadowMapSize = 2048;
 	static constexpr int m_spotShadowMapSize = 2048;
+
+	static constexpr int MAX_POINT_SHADOW = 2;
+	float m_pointFarPlane = 25.0f;
+	int m_pointShadowCount;
 
 	Framebuffer m_dirShadowDepthFBO;
 	Framebuffer m_resolveFBO;
 	Framebuffer m_brightFBO;
 	Framebuffer m_pingpongFBO[2];
 	Framebuffer m_ldrFBO;
+	std::vector<Framebuffer> m_pointShadowFBO;
 
 	std::vector<Framebuffer> m_spotShadowDepthFBO;
 	std::vector<glm::mat4> m_spotLightSpaceMatrices;
@@ -47,6 +54,7 @@ private:
 	Shader m_postFXShader;
 	Shader m_debugShader;
 	Shader m_dirShadowDepthShader;
+	Shader m_pointShadowDepthShader;
 	Shader m_skyboxShader;
 	Shader m_unlitShader;
 	Shader m_fxaaShader;
