@@ -15,6 +15,8 @@
 #include "Input/Input.h"
 #include "Assets/ModelLoader.h"
 #include "Assets/TextureCache.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 #include "plane.h"
 
 Window g_window(800, 600, "hahaha2");
@@ -89,7 +91,6 @@ void confScene() {
 		const char* cubename = ("cube" + std::to_string(i)).c_str();
 		GameObject &cube = scene.addObject(cubename, &cubeMesh, &container_mat);
 		cube.transform.position = cubePositions[i];
-		//float angle = 20.0f * i;
 	}
 
 	placeholderMat.diff = naotxt.ID;

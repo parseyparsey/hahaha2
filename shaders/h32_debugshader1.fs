@@ -279,7 +279,7 @@ float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal) {
     float shadow = 0.0;
 
     vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(lightPos - fragPos);
+    vec3 lightDir = normalize(lightPos - fragPos);//normalize(fragToLight);
     float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
     //float bias = 0.15;
     
