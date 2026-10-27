@@ -36,6 +36,7 @@ private:
 	Framebuffer m_resolveFBO;
 	Framebuffer m_brightFBO;
 	Framebuffer m_pingpongFBO[2];
+	Framebuffer m_ldrFBO;
 
 	std::vector<Framebuffer> m_spotShadowDepthFBO;
 	std::vector<glm::mat4> m_spotLightSpaceMatrices;
@@ -47,6 +48,8 @@ private:
 	Shader m_debugShader;
 	Shader m_dirShadowDepthShader;
 	Shader m_skyboxShader;
+	Shader m_unlitShader;
+	Shader m_fxaaShader;
 
 	unsigned int m_quadVAO = 0, m_quadVBO = 0;
 	void initQuad();
@@ -55,7 +58,8 @@ private:
 	bool m_hdrEnabled = false;
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
-	bool m_bloomEnabled = false;
+	bool m_bloomEnabled = true;
+	bool m_fxaaEnabled = true;
 
 	static constexpr int MAX_SPOT_LIGHTS = 4;
 

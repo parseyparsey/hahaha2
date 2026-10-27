@@ -158,7 +158,7 @@ void confScene() {
 	pl0.linear = 0.09f;
 	pl0.quadratic = 0.032f;
 	pl0.ambient = glm::vec3(0.8f);
-	pl0.diffuse = glm::vec3(0.8f);
+	pl0.diffuse = glm::vec3(1.0f);
 	pl0.specular = glm::vec3(0.3f);
 	pl.push_back(pl0);
 
@@ -166,9 +166,9 @@ void confScene() {
 	placeholderMat.spec = whitetxt.ID;
 	Material &plight_mat = scene.addMaterial(placeholderMat);
 	
-	GameObject &cubelight = scene.addObject("pl0", &cubeMesh, &plight_mat);
-	cubelight.transform.position = plightPos[0];
-	cubelight.transform.scale = glm::vec3(0.3);
+	//GameObject &cubelight = scene.addObject("pl0", &cubeMesh, &plight_mat);
+	//cubelight.transform.position = plightPos[0];
+	//cubelight.transform.scale = glm::vec3(0.3);
 
 	SpotLight sl0{
 		glm::vec3(0.0f), glm::vec3(0.0f), 

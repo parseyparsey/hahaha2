@@ -12,15 +12,18 @@ Renderer::Renderer(int width, int height) :
 	m_pingpongFBO{
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}})},
+	m_ldrFBO(width, height, {{GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE}}),
 	m_lightShader("shaders/lightobj.vs", "shaders/lightobj.fs"),
-	m_brightPassShader("shaders/framebuffer.vs", "shaders/bloomBrightPass.fs"),
-	m_blurShader("shaders/framebuffer.vs", "shaders/bloomBlur.fs"),
-	m_postFXShader("shaders/framebuffer.vs", "shaders/framebuffer.fs"),
+	m_brightPassShader("shaders/h32_framebuffer.vs", "shaders/h32_bloomBrightPass.fs"),
+	m_blurShader("shaders/h32_framebuffer.vs", "shaders/h32_bloomBlur.fs"),
+	m_postFXShader("shaders/h32_framebuffer.vs", "shaders/h32_framebuffer.fs"),
 	m_debugShader("shaders/h32_debugshader1.vs", "shaders/h32_debugshader1.fs"),
 	m_dirShadowDepthShader("shaders/h32_depth_shader.vs", "shaders/h32_depth_shader.fs"),
-	m_skyboxShader("shaders/h32_skybox.vs", "shaders/h32_skybox.fs") 
+	m_skyboxShader("shaders/h32_skybox.vs", "shaders/h32_skybox.fs"),
+	m_unlitShader("shaders/h32_unlit.vs", "shaders/h32_unlit.fs"),
+	m_fxaaShader("shaders/framebuffer.vs", "shaders/h32_fxaa.fs")
 {
-	initQuad();
+	initQuad(); 
 	
 	for (int i = 0; i < MAX_SPOT_LIGHTS; i++)
 		m_spotShadowDepthFBO.emplace_back(m_spotShadowMapSize, m_spotShadowMapSize,
@@ -35,19 +38,23 @@ void Renderer::resize(int width, int height) {
 	m_brightFBO.resize(width, height);
 	m_pingpongFBO[0].resize(width, height);
 	m_pingpongFBO[1].resize(width, height);
+	m_ldrFBO.resize(width, height);
 }
 
 void Renderer::render(Scene &scene) {
 	renderDirShadow(scene);
 	renderSpotShadow(scene);
 	renderForward(scene);
-	//if (m_bloomEnabled)
-	//	bloom();
-	//postFX();
+	if (m_bloomEnabled)
+		bloom();
+	postFX();
 }
 
 void Renderer::renderForward(Scene &scene) {
 	glViewport(0, 0, m_width, m_height);
+
+	m_resolveFBO.bind();
+
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -94,6 +101,18 @@ void Renderer::renderForward(Scene &scene) {
 	}
 
 	renderSkybox(scene);
+
+	m_unlitShader.use();
+	m_unlitShader.setMat4("view", view);
+	m_unlitShader.setMat4("projection", projection);
+	for (auto &l : scene.getPointLights()) {
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), l.position);
+		model = glm::scale(model, glm::vec3(0.1f));
+		m_unlitShader.setMat4("model", model);
+		m_unlitShader.setVec3(
+			"color", l.diffuse * 4.0f);
+		m_skyboxMesh.draw();
+	}
 }
 
 void Renderer::bindMaterial(const Material &mat) {
@@ -158,10 +177,11 @@ void Renderer::setLightUniforms(Scene &scene) {
  
 void Renderer::bloom() {
 	m_brightFBO.bind();
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	m_brightPassShader.use();
 	m_brightPassShader.setInt("sceneTex", 0);
-	m_brightPassShader.setFloat("threshold", 1.0f);
+	m_brightPassShader.setFloat("threshold", 2.0f);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_resolveFBO.getColorAttachment(0));
 	drawQuad();
@@ -183,7 +203,10 @@ void Renderer::bloom() {
 }
 
 void Renderer::postFX() {
-	Framebuffer::bindDefault();
+	if (m_fxaaEnabled)
+		m_ldrFBO.bind();
+	else
+		Framebuffer::bindDefault();
 	glViewport(0, 0, m_width, m_height);
 	glDisable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -203,6 +226,18 @@ void Renderer::postFX() {
 	m_postFXShader.setInt("fbmode", m_postFXMode);
 	m_postFXShader.setBool("bloom", m_bloomEnabled);
 	drawQuad();
+
+	if (m_fxaaEnabled)
+	{
+		Framebuffer::bindDefault();
+		glViewport(0, 0, m_width, m_height);
+		glClear(GL_COLOR_BUFFER_BIT);
+		m_fxaaShader.use();
+		m_fxaaShader.setInt("screenTex", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_ldrFBO.getColorAttachment(0));
+		drawQuad();
+	}
 }
 
 void Renderer::initQuad() {
@@ -219,7 +254,7 @@ void Renderer::initQuad() {
 						  (void *)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-						  (void *)(2 * sizeof(float)));
+						  (void *)(2 * sizeof(float))); 
 	glBindVertexArray(0);
 }
 
@@ -259,7 +294,7 @@ void Renderer::renderDirShadow(Scene &scene) {
 	Framebuffer::bindDefault();
 	glViewport(0, 0, m_width, m_height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	/*
 	static bool printed = false;
 	if (!printed) {
 		for (int r = 0; r < 4; r++)
@@ -269,7 +304,7 @@ void Renderer::renderDirShadow(Scene &scene) {
 		std::cout << "dir: " << obj.direction.x << " " << obj.direction.y << " "
 				  << obj.direction.z << "\n";
 		printed = true;
-	}
+	}*/
 }
 
 glm::mat4 Renderer::spotLightSpaceMatrix(SpotLight& sl) {

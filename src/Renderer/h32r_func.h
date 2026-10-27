@@ -133,6 +133,17 @@ namespace h32rf {
 		return verts;
 	}
 
+	inline bool isPL(const std::string &str) {
+		size_t pos = str.find("pl");
+
+		if (pos != std::string::npos) {
+			if (pos + 2 < str.length()) {
+				return std::isdigit(str[pos + 2]);
+			}
+		}
+		return false;
+	}
+
 }
 
 #endif
