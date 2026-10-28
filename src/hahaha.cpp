@@ -116,7 +116,7 @@ void confScene() {
 	placeholderMat.parallaxClip = false;
 
 	placeholderMat.diff = brickwall_diff.ID;
-	placeholderMat.norm = brickwall_norm.ID;
+	placeholderMat.norm = brickwall_norm.ID; 
 	Material &CubeN_mat = scene.addMaterial(placeholderMat);
 
 	GameObject &cubeN = scene.addObject("cubeN", &cubeMeshPOM, &CubeN_mat);

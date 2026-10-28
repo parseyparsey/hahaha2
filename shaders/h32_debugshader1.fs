@@ -124,7 +124,7 @@ void main() {
     }
 
     FragColor = vec4(result, 1.0);
-    
+
     //vec3 pc = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
     //FragColor = vec4(pc.xy, 0.0, 1.0);
 }
@@ -323,7 +323,7 @@ float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal) {
 }
 
 vec2 ParallaxMapping(vec2 uv, vec3 v){
-    float numLayers = mix(32.0, 8.0, abs(v.z));
+    float numLayers = mix(64.0, 8.0, abs(v.z));
     float layerDepth = 1.0 / numLayers;
     vec2 delta = (v.xy / max(v.z, 0.05) * height_scale) / numLayers;
 
