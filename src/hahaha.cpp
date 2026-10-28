@@ -151,7 +151,7 @@ void confScene() {
 		glm::vec3(3.0f, -2.0f, -10.0f), glm::vec3(2.0f, 1.5f, -5.0f),
 	};
 	glm::vec3 plightDiff[] = {
-		glm::vec3(1.0f),	glm::vec3(0.5f),
+		glm::vec3(1.0f),	glm::vec3(0.8f),
 		glm::vec3(0.3f),	glm::vec3(0.6f),
 		glm::vec3(0.8f), glm::vec3(0.5f),
 	};
@@ -160,17 +160,17 @@ void confScene() {
 	auto &pl = scene.getPointLights();
 
 	PointLight pl0;
-	//for (int i = 0; i < 6; i++) {
-		pl0.position = plightPos[0];
+	for (int i = 0; i < 1; i++) {
+		pl0.position = plightPos[i];
 		pl0.constant = 1.0f;
 		pl0.linear = 0.09f;
 		pl0.quadratic = 0.032f;
 		pl0.ambient = glm::vec3(0.8f);
-		pl0.diffuse = /* plightDiff[i];
-		*/ glm::vec3(1.0f);
+		pl0.diffuse = plightDiff[i];
+		 //glm::vec3(1.0f);
 		pl0.specular = glm::vec3(0.3f);
 		pl.push_back(pl0);
-	//}
+	}
 
 	placeholderMat.diff = whitetxt.ID;
 	placeholderMat.spec = whitetxt.ID;
