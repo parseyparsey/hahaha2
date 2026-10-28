@@ -144,6 +144,52 @@ namespace h32rf {
 		return false;
 	}
 
+	inline void computeTangents(std::vector<Vertex> &v,
+								const std::vector<unsigned int> &idx = {}) {
+		for (auto &x : v)
+			x.tangent = x.bitangent = glm::vec3(0.0f);
+
+		size_t tris = (idx.empty() ? v.size() : idx.size()) / 3;
+		for (size_t t = 0; t < tris; t++) {
+			unsigned a = idx.empty() ? unsigned(t * 3) : idx[t * 3];
+			unsigned b = idx.empty() ? unsigned(t * 3 + 1) : idx[t * 3 + 1];
+			unsigned c = idx.empty() ? unsigned(t * 3 + 2) : idx[t * 3 + 2];
+
+			glm::vec3 e1 = v[b].position - v[a].position;
+			glm::vec3 e2 = v[c].position - v[a].position;
+			glm::vec2 d1 = v[b].texCoords - v[a].texCoords;
+			glm::vec2 d2 = v[c].texCoords - v[a].texCoords;
+
+			float det = d1.x * d2.y - d2.x * d1.y;
+			if (std::abs(det) < 1e-8f)
+				continue; // degenerate UVs
+			float r = 1.0f / det;
+			glm::vec3 T = r * (e1 * d2.y - e2 * d1.y);
+			glm::vec3 B = r * (e2 * d1.x - e1 * d2.x);
+
+			for (unsigned i : {a, b, c}) {
+				v[i].tangent += T;
+				v[i].bitangent += B;
+			}
+		}
+
+		for (auto &x : v) {
+			glm::vec3 t =
+				x.tangent -
+				x.normal * glm::dot(x.normal, x.tangent); // orthogonalize
+			if (glm::length(t) < 1e-6f) // no usable UV triangle
+				t = glm::cross(x.normal, std::abs(x.normal.y) < 0.9f
+											 ? glm::vec3(0, 1, 0)
+											 : glm::vec3(1, 0, 0));
+			x.tangent = glm::normalize(t);
+			float h =
+				glm::dot(glm::cross(x.normal, x.tangent), x.bitangent) < 0.0f
+					? -1.0f
+					: 1.0f;
+			x.bitangent = glm::cross(x.normal, x.tangent) * h;
+		}
+	}
+
 }
 
 #endif

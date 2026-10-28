@@ -37,6 +37,7 @@ bool ModelLoader::import(const std::string &path, ModelData &out) {
 		md.diffPath = firstTexture(m, aiTextureType_DIFFUSE);
 		md.specPath = firstTexture(m, aiTextureType_SPECULAR);
 		md.normPath = firstTexture(m, aiTextureType_NORMALS);
+		md.heightPath = firstTexture(m, aiTextureType_DISPLACEMENT);
 		if (md.normPath.empty())
 			md.normPath = firstTexture(m, aiTextureType_HEIGHT);
 		float shin;
@@ -90,6 +91,10 @@ std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data
 			m.diff = textures.get(data.directory + "/" + md.diffPath, false, flips.diffuse);
 		if (!md.specPath.empty())
 			m.spec = textures.get(data.directory + "/" + md.specPath, false, flips.specular);
+		if (!md.normPath.empty())
+			m.norm = textures.get(data.directory + "/" + md.normPath, false, flips.normal);
+		if (!md.heightPath.empty())
+			m.parallaxMap = textures.get(data.directory + "/" + md.heightPath, false, flips.height);
 		m.shininess = md.shininess;
 		mats.push_back(&scene.addMaterial(m));
 	}
@@ -134,7 +139,7 @@ bool ModelLoader::writeBinary(const std::string& file, ModelData& data) {
 		return false;
 	
 	o.write("H32M", 4);
-	uint32_t hdr[4] = {1, (uint32_t)sizeof(Vertex),
+	uint32_t hdr[4] = {2, (uint32_t)sizeof(Vertex),
 					   (uint32_t)data.materials.size(), (uint32_t)data.meshes.size()};
 	o.write((char *)hdr, sizeof(hdr));
 
@@ -169,7 +174,7 @@ bool ModelLoader::readBinary(const std::string& file, ModelData& out) {
 
 	if (!in.read(magic, 4) || std::memcmp(magic, "H32M", 4) != 0)
 		return false;
-	if (!in.read((char *)hdr, sizeof(hdr)) || hdr[0] != 1 ||
+	if (!in.read((char *)hdr, sizeof(hdr)) || hdr[0] != 2 ||
 		hdr[1] != sizeof(Vertex))
 		return false;
 

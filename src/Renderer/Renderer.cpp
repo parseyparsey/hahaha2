@@ -84,7 +84,10 @@ void Renderer::renderForward(Scene &scene) {
 	m_debugShader.setInt("material.texture_specular", TextureUnit::Specular);
 	m_debugShader.setInt("dirShadowMap", TextureUnit::DirShadowMap);
 	m_debugShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
-	m_debugShader.setBool("blinn", true); 
+	m_debugShader.setBool("blinn", true);
+
+	m_debugShader.setInt("normalMap", TextureUnit::NormalMap);
+	m_debugShader.setInt("parallaxDepthMap", TextureUnit::ParallaxMap);
 
 	for (int i = 0; i < (int)m_spotLightSpaceMatrices.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + TextureUnit::SpotShadowBase + i);
@@ -139,7 +142,22 @@ void Renderer::bindMaterial(const Material &mat) {
 	glBindTexture(GL_TEXTURE_2D, mat.diff);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, mat.spec);
-	//std::cout << mat.spec << std::endl;
+	
+	bool n = mat.isNormalMapped(), p = mat.isParallaxMapped();
+	m_debugShader.setBool("useNormalMap", n);
+	if (n) {
+		glActiveTexture(GL_TEXTURE0 + TextureUnit::NormalMap);
+		glBindTexture(GL_TEXTURE_2D, mat.norm);
+	}
+
+	m_debugShader.setBool("useParallaxMap", p);
+	m_debugShader.setBool("parallaxClip", mat.parallaxClip);
+	if (p) {
+		glActiveTexture(GL_TEXTURE0 + TextureUnit::ParallaxMap);
+		glBindTexture(GL_TEXTURE_2D, mat.parallaxMap);
+		m_debugShader.setFloat("height_scale", mat.heightScale);
+	}
+
 	/*
 	m_lightShader.setBool("isNormalMapped", mat.isNormalMapped);
 	if (mat.isNormalMapped) {

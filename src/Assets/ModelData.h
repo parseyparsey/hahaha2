@@ -5,7 +5,7 @@
 #include "Scene/Mesh.h"
 
 struct MaterialData {
-	std::string diffPath, specPath, normPath;
+	std::string diffPath, specPath, normPath, heightPath;
 	float shininess = 32.0f;
 };
 
@@ -25,4 +25,5 @@ struct TextureFlips {
 	bool diffuse = true;
 	bool specular = true;
 	bool normal = true;
+	bool height = true;
 };

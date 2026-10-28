@@ -31,6 +31,11 @@ Texture whitetxt("textures/white.png", false, false);
 Texture planetxt("textures/wood.png", false, false);
 Texture naotxt("textures/nao_cropped.jpg", true, false, 1);
 Texture naotxt1("textures/nao08.jpg", true, false, 1);
+Texture bricks2_diff("textures/bricks2.jpg", false, false);
+Texture bricks2_norm("textures/bricks2_normal.jpg", false, false);
+Texture bricks2_disp("textures/bricks2_disp.jpg", false, false);
+Texture brickwall_diff("textures/brickwall.jpg", false, false);
+Texture brickwall_norm("textures/brickwall_normal.jpg", false, false);
 
 float dt;
 float lasttime;
@@ -93,8 +98,35 @@ void confScene() {
 		cube.transform.position = cubePositions[i];
 	}
 
+	placeholderMat.diff = bricks2_diff.ID;
+	placeholderMat.spec = whitetxt.ID;
+	placeholderMat.norm = bricks2_norm.ID;
+	placeholderMat.parallaxMap = bricks2_disp.ID;
+	placeholderMat.parallaxClip = true;
+	Material &POM_mat = scene.addMaterial(placeholderMat);
+
+	auto vertscubePOM = h32rf::makeCubeVertices();
+	h32rf::computeTangents(vertscubePOM);
+	Mesh &cubeMeshPOM = scene.addMesh(vertscubePOM);
+	GameObject &cubePOM = scene.addObject("cubePOM", &cubeMeshPOM, &POM_mat);
+	cubePOM.transform.position = glm::vec3(3.0f, 0.0f, -6.0f);
+	cubePOM.transform.rotation = glm::vec3(0.0f, -45.0f, 0.0f);
+
+	placeholderMat.parallaxMap = 0;
+	placeholderMat.parallaxClip = false;
+
+	placeholderMat.diff = brickwall_diff.ID;
+	placeholderMat.norm = brickwall_norm.ID;
+	Material &CubeN_mat = scene.addMaterial(placeholderMat);
+
+	GameObject &cubeN = scene.addObject("cubeN", &cubeMeshPOM, &CubeN_mat);
+	cubeN.transform.position = glm::vec3(-3.0f, 0.0f, -6.0f);
+	cubeN.transform.rotation = glm::vec3(0.0f, 45.0f, 0.0f);
+
 	placeholderMat.diff = naotxt.ID;
 	placeholderMat.spec = 0;
+	placeholderMat.norm = 0;
+
 	Material &naomat = scene.addMaterial(placeholderMat);
 	GameObject &naocube = scene.addObject("naocube", &cubeMesh, &naomat);
 	naocube.transform.position = glm::vec3(0.0f, 0.0f, -10.0f);

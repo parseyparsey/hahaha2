@@ -11,10 +11,12 @@ struct Material {
 	unsigned int spec = 0;
 	unsigned int norm = 0;
 	unsigned int parallaxMap = 0;
-	bool isNormalMapped = false;
-	bool isParallaxMapped = false;
 	float shininess = 32.0f;
 	float heightScale = 0.1f;
+	bool parallaxClip = false;
+	
+	bool isNormalMapped() const { return norm != 0; }
+	bool isParallaxMapped() const { return parallaxMap != 0; }
 };
 
 struct Transform {

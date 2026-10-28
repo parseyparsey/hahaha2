@@ -50,6 +50,7 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 in vec4 fragPosLightSpace;
+in mat3 TBN;
 
 uniform vec3 viewPos;
 
@@ -73,25 +74,45 @@ uniform samplerCube pointShadowMap[MAX_POINT_SHADOWS];
 uniform int pointShadowCount;
 uniform float pointFarPlane;
 
+uniform sampler2D normalMap;
+uniform bool useNormalMap;
+
+uniform float height_scale;
+uniform sampler2D parallaxDepthMap;
+uniform bool useParallaxMap;
+uniform bool parallaxClip;
+
 vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords);
 vec3 calcPointLight(pointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords, float shadow);
 vec3 calcSpotLight(spotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec2 TexCoords, float shadow);
 float calcDirShadow(vec4 fragPosLightSpace, dirLight light);
 float calcSpotShadow(int i, vec3 fragPos, vec3 normal,vec3 lightDir);
 float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal);
+vec2 ParallaxMapping(vec2 uv, vec3 v);
 
 void main() {
+    vec2 uv = TexCoords;
+
+    if (useParallaxMap) {
+        uv = ParallaxMapping(uv, normalize(transpose(TBN) * (viewPos - FragPos)));
+        if (parallaxClip && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0)) discard;
+    }
+
     vec3 norm = normalize(Normal);
+
+    if (useNormalMap)
+        norm = normalize(TBN * (texture(normalMap, uv).rgb * 2.0 - 1.0));
+
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 result;
 
-    result = calcDirLight(dirlight, norm, viewDir, TexCoords);
+    result = calcDirLight(dirlight, norm, viewDir, uv);
 
     for(int i = 0; i < pl_num; i++) {
         float shadow = (i < pointShadowCount)
             ? CalcPointShadow(i, FragPos, pLights[i].position, Normal)
             : 0.0;
-        result += calcPointLight(pLights[i], norm, FragPos, viewDir, TexCoords, shadow);
+        result += calcPointLight(pLights[i], norm, FragPos, viewDir, uv, shadow);
     }
 
     for(int i = 0; i < sl_num; i++){
@@ -99,12 +120,13 @@ void main() {
         float shadow = (i < sl_num)
             ? calcSpotShadow(i, FragPos, norm, normalize(spotlight[i].position - FragPos))
             : 0.0;
-        result += calcSpotLight(spotlight[i], norm, FragPos, viewDir, TexCoords, shadow);
+        result += calcSpotLight(spotlight[i], norm, FragPos, viewDir, uv, shadow);
     }
 
     FragColor = vec4(result, 1.0);
+    
     //vec3 pc = fragPosLightSpace.xyz / fragPosLightSpace.w * 0.5 + 0.5;
-    //FragColor = vec4(pc.xy, 0.0, 1.0);    //
+    //FragColor = vec4(pc.xy, 0.0, 1.0);
 }
 
 vec3 calcDirLight(dirLight light, vec3 normal, vec3 viewDir, vec2 TexCoords){
@@ -298,4 +320,24 @@ float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal) {
     shadow /= float(samples);
 
     return shadow;
+}
+
+vec2 ParallaxMapping(vec2 uv, vec3 v){
+    float numLayers = mix(32.0, 8.0, abs(v.z));
+    float layerDepth = 1.0 / numLayers;
+    vec2 delta = (v.xy / max(v.z, 0.05) * height_scale) / numLayers;
+
+    vec2 cur = uv;
+    float curDepth = 0.0;
+    float h = textureLod(parallaxDepthMap, cur, 0.0).r;
+    for (int i = 0; i < 32 && curDepth < h; i++) {
+        cur -= delta;
+        h = textureLod(parallaxDepthMap, cur, 0.0).r;
+        curDepth += layerDepth;
+    }
+    vec2 prev = cur + delta;
+    float after  = h - curDepth;
+    float before = textureLod(parallaxDepthMap, prev, 0.0).r - curDepth + layerDepth;
+    float w = after / (after - before);
+    return prev * w + cur * (1.0 - w);
 }
