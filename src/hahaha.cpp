@@ -53,8 +53,6 @@ int main() {
 
 	glfwSetInputMode(g_window.getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	std::cout << containerDiffuse.ID << std::endl;
-
 	confScene();
 
 	while (!g_window.shouldClose()) {
