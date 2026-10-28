@@ -148,6 +148,17 @@ void confScene() {
 		t.scale = glm::vec3(0.6f, 0.6f, 0.6f);
 	}
 
+	ModelData cyborgData;
+	ModelLoader::load("models/cyborg/cyborg.obj", cyborgData);
+	auto cyborg = ModelLoader::instantiate(scene, cyborgData, textures,
+											 "cyborg", {true, true, true});
+
+	for (size_t i : cyborg) {
+		auto &t = scene.getObjects()[i].transform;
+		t.position = glm::vec3(-3.0f, 3.0f, -6.0f);
+		t.scale = glm::vec3(0.6f, 0.6f, 0.6f);
+	}
+
 	Plane plane(150);
 	placeholderMat.diff = planetxt.ID;
 	placeholderMat.spec = whitetxt.ID;
