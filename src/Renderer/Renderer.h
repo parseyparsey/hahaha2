@@ -35,7 +35,7 @@ private:
 	static constexpr int m_spotShadowMapSize = 2048;
 
 	static constexpr int MAX_POINT_SHADOW = 2;
-	float m_pointFarPlane = 25.0f * 2;
+	float m_pointFarPlane = 25.0f;
 	int m_pointShadowCount;
 
 	Framebuffer m_dirShadowDepthFBO;
@@ -63,7 +63,7 @@ private:
 	void initQuad();
 	void drawQuad();
 
-	bool m_hdrEnabled = false;
+	bool m_hdrEnabled = true;
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
 	bool m_bloomEnabled = true;

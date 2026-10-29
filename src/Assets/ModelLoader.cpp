@@ -88,7 +88,7 @@ std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data
 	for (auto &md : data.materials) {
 		Material m{};
 		if (!md.diffPath.empty())
-			m.diff = textures.get(data.directory + "/" + md.diffPath, false, flips.diffuse);
+			m.diff = textures.get(data.directory + "/" + md.diffPath, true, flips.diffuse);
 		if (!md.specPath.empty())
 			m.spec = textures.get(data.directory + "/" + md.specPath, false, flips.specular);
 		if (!md.normPath.empty())
@@ -96,6 +96,7 @@ std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data
 		if (!md.heightPath.empty())
 			m.parallaxMap = textures.get(data.directory + "/" + md.heightPath, false, flips.height);
 		m.shininess = md.shininess;
+		m.model = ShadingModel::BLINNPHONG;
 		mats.push_back(&scene.addMaterial(m));
 	}
 

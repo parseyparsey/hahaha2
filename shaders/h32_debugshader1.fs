@@ -11,6 +11,13 @@ struct Material{
     float shininess;
 };
 
+struct PBRMaterial{
+    sampler2D albedoMap;
+    sampler2D metallicMap;
+    sampler2D roughnessMap;
+    sampler2D aoMap;
+};
+
 struct dirLight{
     vec3 ambient;
     vec3 diffuse;

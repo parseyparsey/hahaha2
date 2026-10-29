@@ -25,16 +25,20 @@ TextureCache textures;
 Scene scene;
 
 Texture containerDiffuse("textures/container2.png", false,
-						 false);
+						 true);
 Texture containerSpecular("textures/container2_specular.png", false, false);
 Texture whitetxt("textures/white.png", false, false);
-Texture planetxt("textures/wood.png", false, false);
-Texture naotxt("textures/nao_cropped.jpg", true, false, 1);
-Texture naotxt1("textures/nao08.jpg", true, false, 1);
-Texture bricks2_diff("textures/bricks2.jpg", false, false);
-Texture bricks2_norm("textures/bricks2_normal.jpg", false, false);
-Texture bricks2_disp("textures/bricks2_disp.jpg", false, false);
-Texture brickwall_diff("textures/brickwall.jpg", false, false);
+Texture planetxt("textures/wood.png", false, true);
+Texture naotxt("textures/nao_cropped.jpg", true, true, 1);
+Texture naotxt1("textures/nao08.jpg", true, true, 1);
+Texture bricks2_diff(/*"textures/bricks2.jpg"*/"textures/toy_box_diffuse.png", false, true);
+Texture bricks2_norm(
+	/*"textures/bricks2_normal.jpg"*/ "textures/toy_box_normal.png", false,
+	false);
+Texture
+	bricks2_disp(/*"textures/bricks2_disp.jpg"*/ "textures/toy_box_disp.png",
+				 false, false);
+Texture brickwall_diff("textures/brickwall.jpg", false, true);
 Texture brickwall_norm("textures/brickwall_normal.jpg", false, false);
 
 float dt;
@@ -182,7 +186,7 @@ void confScene() {
 	auto &dl = scene.getDirLight();
 	dl.direction = glm::vec3(0.0f, -1.0f, -0.3f);
 	dl.ambient = glm::vec3(0.01f);
-	dl.diffuse = glm::vec3(0.2f);
+	dl.diffuse = glm::vec3(0.1f);
 	dl.specular = glm::vec3(0.0f);
 
 	
@@ -193,7 +197,7 @@ void confScene() {
 	};
 	glm::vec3 plightDiff[] = {
 		glm::vec3(1.0f),	glm::vec3(0.8f),
-		glm::vec3(0.3f),	glm::vec3(0.6f),
+		glm::vec3(0.9f),	glm::vec3(0.6f),
 		glm::vec3(0.8f), glm::vec3(0.5f),
 	};
 
@@ -201,7 +205,7 @@ void confScene() {
 	auto &pl = scene.getPointLights();
 
 	PointLight pl0;
-	for (int i = 0; i < 1; i++) {
+	for (int i = 0; i < 3; i++) {
 		pl0.position = plightPos[i];
 		pl0.constant = 1.0f;
 		pl0.linear = 0.09f;
