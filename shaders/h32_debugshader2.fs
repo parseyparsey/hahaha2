@@ -353,7 +353,7 @@ vec2 ParallaxMapping(vec2 uv, vec3 v){
     vec2 cur = uv;
     float curDepth = 0.0;
     float h = textureLod(parallaxDepthMap, cur, 0.0).r;
-    for (int i = 0; i < 32 && curDepth < h; i++) {
+    for (int i = 0; i < 64 && curDepth < h; i++) {
         cur -= delta;
         h = textureLod(parallaxDepthMap, cur, 0.0).r;
         curDepth += layerDepth;

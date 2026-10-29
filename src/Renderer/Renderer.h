@@ -34,7 +34,7 @@ private:
 	static constexpr int m_pointShadowMapSize = 2048;
 	static constexpr int m_spotShadowMapSize = 2048;
 
-	static constexpr int MAX_POINT_SHADOW = 2;
+	static constexpr int MAX_POINT_SHADOW = 1;
 	float m_pointFarPlane = 25.0f;
 	int m_pointShadowCount;
 

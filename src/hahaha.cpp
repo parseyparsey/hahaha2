@@ -34,7 +34,7 @@ Texture naotxt1("textures/nao08.jpg", true, true, 1);
 Texture bricks2_diff(/*"textures/bricks2.jpg"*/"textures/toy_box_diffuse.png", false, true);
 Texture bricks2_norm(
 	/*"textures/bricks2_normal.jpg"*/ "textures/toy_box_normal.png", false,
-	false);
+	false); 
 Texture
 	bricks2_disp(/*"textures/bricks2_disp.jpg"*/ "textures/toy_box_disp.png",
 				 false, false);
