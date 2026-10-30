@@ -66,7 +66,7 @@ private:
 	bool m_hdrEnabled = true;
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
-	bool m_bloomEnabled = true;
+	bool m_bloomEnabled = false;
 	bool m_fxaaEnabled = true;
 
 	static constexpr int MAX_SPOT_LIGHTS = 4;
@@ -76,6 +76,10 @@ private:
 	enum TextureUnit {
 		Diffuse = 0,
 		Specular = 1,
+		Albedo = 0,
+		Metallic = 1,
+		Roughness = 2,
+		AO = 3,
 		DirShadowMap = 4,
 		PointShadowMap = 5,
 		NormalMap = 7,
@@ -85,4 +89,6 @@ private:
 	};
 
 	glm::mat4 lightSpaceMatrix;
+
+	unsigned int m_whiteTex;
 };

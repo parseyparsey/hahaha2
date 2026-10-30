@@ -17,7 +17,7 @@ Renderer::Renderer(int width, int height) :
 	m_brightPassShader("shaders/h32_framebuffer.vs", "shaders/h32_bloomBrightPass.fs"),
 	m_blurShader("shaders/h32_framebuffer.vs", "shaders/h32_bloomBlur.fs"),
 	m_postFXShader("shaders/h32_framebuffer.vs", "shaders/h32_framebuffer.fs"),
-	m_debugShader("shaders/h32_debugshader1.vs", "shaders/h32_debugshader2.fs"),
+	m_debugShader("shaders/h32_debugshader1.vs", "shaders/h32_debugshader21.fs"),
 	m_dirShadowDepthShader("shaders/h32_depth_shader.vs", "shaders/h32_depth_shader.fs"),
 	m_skyboxShader("shaders/h32_skybox.vs", "shaders/h32_skybox.fs"),
 	m_unlitShader("shaders/h32_unlit.vs", "shaders/h32_unlit.fs"),
@@ -25,7 +25,8 @@ Renderer::Renderer(int width, int height) :
 	m_pointShadowDepthShader("shaders/h32_pshadow_depth.vs",
 							 "shaders/h32_pshadow_depth.fs","shaders/h32_pshadow_depth.gs")
 {
-	initQuad(); 
+	initQuad();
+	h32rf::whiteTxt(m_whiteTex);
 	
 	for (int i = 0; i < MAX_SPOT_LIGHTS; i++)
 		m_spotShadowDepthFBO.emplace_back(m_spotShadowMapSize, m_spotShadowMapSize,
@@ -81,7 +82,6 @@ void Renderer::renderForward(Scene &scene) {
 	m_debugShader.setMat4("projection", projection);
 	m_debugShader.setVec3("viewPos", cam.Position);
 	m_debugShader.setInt("material.texture_diffuse", TextureUnit::Diffuse);
-	m_debugShader.setInt("material.texture_specular", TextureUnit::Specular);
 	m_debugShader.setInt("dirShadowMap", TextureUnit::DirShadowMap);
 	m_debugShader.setMat4("LightSpaceMatrix", lightSpaceMatrix);
 	m_debugShader.setBool("blinn", true);
@@ -138,10 +138,6 @@ void Renderer::renderForward(Scene &scene) {
 }
 
 void Renderer::bindMaterial(const Material &mat) {
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, mat.diff);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, mat.spec);
 	
 	bool n = mat.isNormalMapped(), p = mat.isParallaxMapped();
 	m_debugShader.setBool("useNormalMap", n);
@@ -172,8 +168,29 @@ void Renderer::bindMaterial(const Material &mat) {
 		m_lightShader.setFloat("height_scale", mat.heightScale);
 	}
 	*/
-	m_debugShader.setFloat("material.shininess", mat.shininess);
 	m_debugShader.setInt("shadingModel", mat.model);
+
+	auto pick = [&](unsigned int tex) { return tex ? tex : m_whiteTex; };
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, pick(mat.diff));
+
+	if (mat.model == ShadingModel::BLINNPHONG) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, mat.spec);
+		m_debugShader.setInt("material.texture_specular",TextureUnit::Specular);
+		m_debugShader.setFloat("material.shininess", mat.shininess);
+	} else if (mat.model == ShadingModel::PBR) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pick(mat.metallicMap));
+		m_debugShader.setInt("pbrMat.metallicMap",TextureUnit::Metallic);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, pick(mat.roughnessMap));
+		m_debugShader.setInt("pbrMat.roughnessMap", TextureUnit::Roughness);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pick(mat.aoMap));
+		m_debugShader.setInt("pbrMat.aoMap", TextureUnit::AO);
+	}
 }
 
 void Renderer::setLightUniforms(Scene &scene) {

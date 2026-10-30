@@ -18,6 +18,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include "plane.h"
+#include "sphere.h"
 
 Window g_window(800, 600, "hahaha2");
 Renderer renderer(800, 600);
@@ -40,6 +41,11 @@ Texture
 				 false, false);
 Texture brickwall_diff("textures/brickwall.jpg", false, true);
 Texture brickwall_norm("textures/brickwall_normal.jpg", false, false);
+Texture rust_diff("textures/rusted_iron/albedo.png", false, true);
+Texture rust_rough("textures/rusted_iron/roughness.png", false, false);
+Texture rust_norm("textures/rusted_iron/normal.png", false, false);
+Texture rust_metal("textures/rusted_iron/metallic.png", false, false);
+Texture rust_ao("textures/rusted_iron/ao.png", false, false);
 
 float dt;
 float lasttime;
@@ -171,6 +177,23 @@ void confScene() {
 
 	GameObject &planeobj = scene.addObject("plane", &planeMesh, &plane_mat);
 	planeobj.transform.position = glm::vec3(-30.0f, -7.0f, -30.0f);
+
+	Sphere sphere(64);
+	placeholderMat.diff = rust_diff.ID;
+	placeholderMat.norm = rust_norm.ID;
+	placeholderMat.metallicMap = rust_metal.ID;
+	placeholderMat.aoMap = rust_ao.ID;
+	placeholderMat.roughnessMap = rust_rough.ID;
+	placeholderMat.model = ShadingModel::PBR;
+	placeholderMat.metallic = 0.5;
+	placeholderMat.roughness = 0.5;
+
+	Mesh &sphereMesh = scene.addMesh(sphere.vertices, sphere.indices);
+
+	Material &rust_mat = scene.addMaterial(placeholderMat);
+	GameObject &rust = scene.addObject("rust", &sphereMesh, &rust_mat);
+	rust.transform.position = glm::vec3(-3.0f, 1.0f, -6.0f);
+	placeholderMat.model = ShadingModel::BLINNPHONG;
 
 	std::vector<std::string> faces{
 		"textures/skybox01/right.jpg", "textures/skybox01/left.jpg",

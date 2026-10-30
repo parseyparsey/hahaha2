@@ -14,6 +14,7 @@ enum ShadingModel {
 struct Material {
 	int model = ShadingModel::BLINNPHONG;
 
+	unsigned int diff = 0;
 	unsigned int parallaxMap = 0;
 	unsigned int norm = 0;
 	float heightScale = 0.1f;
@@ -23,13 +24,12 @@ struct Material {
 	bool isParallaxMapped() const { return parallaxMap != 0; }
 	
 	//BLINN-PHONG
-	unsigned int diff = 0;
 	unsigned int spec = 0;
 	float shininess = 32.0f;
 
 	//PBR
-	unsigned int metalRough = 0, ao = 0, emissiveMap = 0;
-	float metallic = 0.0f, roughness = 0.5f;
+	unsigned int metallicMap = 0, aoMap = 0, emissiveMap = 0, roughnessMap = 0;
+	float metallic = 1.0f, roughness = 1.0f;
 };
 
 struct Transform {

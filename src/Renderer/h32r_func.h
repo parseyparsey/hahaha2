@@ -190,6 +190,26 @@ namespace h32rf {
 		}
 	}
 
+	inline void whiteTxt(unsigned int& whiteTex) {
+		unsigned char white[4] = {255, 255, 255, 255};
+		glGenTextures(1, &whiteTex);
+		glBindTexture(GL_TEXTURE_2D, whiteTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA,
+					 GL_UNSIGNED_BYTE, white);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+						GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
+
+	inline void genTexColored(unsigned int &Tex, int r, int g, int b, int a) {
+		unsigned char color[4] = {r, g, b, a};
+		glGenTextures(1, &Tex);
+		glBindTexture(GL_TEXTURE_2D, Tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA,
+					 GL_UNSIGNED_BYTE, color);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
 }
 
 #endif

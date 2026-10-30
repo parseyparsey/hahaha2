@@ -18,6 +18,9 @@ struct PBRMaterial{
     sampler2D metallicMap;
     sampler2D roughnessMap;
     sampler2D aoMap;
+
+    float metallicFactor;
+    float roughnessFactor;
 };
 
 struct Surface{
@@ -29,7 +32,7 @@ struct Surface{
 
     //PBR
     float metallic, roughness, ao;
-}
+};
 
 struct dirLight{
     vec3 ambient;
@@ -113,8 +116,8 @@ vec2 ParallaxMapping(vec2 uv, vec3 v);
 const float PI = 3.14159265359;
 
 //PBR FUNCTIONS
-vec3 bdrfPBR(Surface s, vec3 L, vec3 V, vec3 radiance);
-vec3 bdrfBlinnPhong(Surface s, vec3 L, vec3 V, vec3 radiance);
+vec3 brdfPBR(Surface s, vec3 L, vec3 V, vec3 radiance);
+vec3 brdfBlinnPhong(Surface s, vec3 L, vec3 V, vec3 radiance);
 vec3 shade(Surface s, vec3 V);
 vec3 evalBRDF(Surface s, vec3 L, vec3 V, vec3 radiance);
 
@@ -137,23 +140,23 @@ void main() {
     s.pos = FragPos;
     s.N = norm;
     s.Ng = normalize(Normal);
-    s.a0 = 1.0;
+    s.ao = 1.0;
+
+    s.albedo = texture(material.texture_diffuse, uv).rgb;
 
     if (shadingModel == BLINNPHONG) {
-        s.albedo = texture(material.texture_diffuse, uv).rgb;
         s.specMask = texture(material.texture_specular, uv).r;
         s.shininess = material.shininess;
     }
     else if (shadingModel == PBR) {
-        s.albedo = texture(pbrMat.albedoMap, uv).rgb;
-        s.metallic = texture(pbrMat.metallicMap, uv).r;
-        s.roughness = texture(pbrMat.roughnessMap, uv).r;
+        s.metallic = texture(pbrMat.metallicMap, uv).r * pbrMat.metallicFactor;
+        s.roughness = clamp(texture(pbrMat.roughnessMap, uv).r * pbrMat.roughnessFactor, 0.04, 1.0);
         s.ao = texture(pbrMat.aoMap, uv).r;
     }
     FragColor = vec4(shade(s, viewDir), 1.0);
 }
 
-vec3 bdrfPBR(Surface s, vec3 L, vec3 V, vec3 radiance) {
+vec3 brdfPBR(Surface s, vec3 L, vec3 V, vec3 radiance) {
     vec3 H = normalize(V + L);
 
     float NDotL = max(dot(s.N, L), 0.0);
@@ -178,7 +181,7 @@ vec3 bdrfPBR(Surface s, vec3 L, vec3 V, vec3 radiance) {
     return (kD * s.albedo / PI + spec) * radiance * NDotL;
 }
 
-vec3 bdrfBlinnPhong(Surface s, vec3 L, vec3 V, vec3 radiance) {
+vec3 brdfBlinnPhong(Surface s, vec3 L, vec3 V, vec3 radiance) {
     float diff = max(dot(s.N, L), 0.0);
     float spec = blinn ? pow(max(dot(s.N, normalize(L + V)), 0.0), s.shininess)
                        : pow(max(dot(V, reflect(-L, s.N)), 0.0), s.shininess);
@@ -187,8 +190,8 @@ vec3 bdrfBlinnPhong(Surface s, vec3 L, vec3 V, vec3 radiance) {
 }
 
 vec3 evalBRDF(Surface s, vec3 L, vec3 V, vec3 radiance) {
-    return (shadingModel == BLINNPHONG) ? bdrfBlinnPhong(s, L, V, radiance)
-                                        : bdrfPBR(s, L, V, radiance);
+    return (shadingModel == BLINNPHONG) ? brdfBlinnPhong(s, L, V, radiance)
+                                        : brdfPBR(s, L, V, radiance);
 }
 
 vec3 shade(Surface s, vec3 V) {
