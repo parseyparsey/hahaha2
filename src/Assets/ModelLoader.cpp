@@ -140,7 +140,7 @@ bool ModelLoader::writeBinary(const std::string& file, ModelData& data) {
 		return false;
 	
 	o.write("H32M", 4);
-	uint32_t hdr[4] = {2, (uint32_t)sizeof(Vertex),
+	uint32_t hdr[4] = {3, (uint32_t)sizeof(Vertex),
 					   (uint32_t)data.materials.size(), (uint32_t)data.meshes.size()};
 	o.write((char *)hdr, sizeof(hdr));
 
@@ -149,6 +149,7 @@ bool ModelLoader::writeBinary(const std::string& file, ModelData& data) {
 		writeStr(o, m.diffPath);
 		writeStr(o, m.specPath);
 		writeStr(o, m.normPath);
+		writeStr(o, m.heightPath);
 		o.write((char *)&m.shininess, 4);
 	}
 
@@ -175,7 +176,7 @@ bool ModelLoader::readBinary(const std::string& file, ModelData& out) {
 
 	if (!in.read(magic, 4) || std::memcmp(magic, "H32M", 4) != 0)
 		return false;
-	if (!in.read((char *)hdr, sizeof(hdr)) || hdr[0] != 2 ||
+	if (!in.read((char *)hdr, sizeof(hdr)) || hdr[0] != 3 ||
 		hdr[1] != sizeof(Vertex))
 		return false;
 
@@ -183,7 +184,7 @@ bool ModelLoader::readBinary(const std::string& file, ModelData& out) {
 	
 	for (auto &m : out.materials) {
 		if (!readStr(in, m.diffPath) || !readStr(in, m.specPath) ||
-			!readStr(in, m.normPath))
+			!readStr(in, m.normPath) || !readStr(in, m.heightPath))
 			return false;
 		if (!in.read((char *)&m.shininess, 4))
 			return false;
