@@ -175,21 +175,29 @@ void Renderer::bindMaterial(const Material &mat) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, pick(mat.diff));
 
-	if (mat.model == ShadingModel::BLINNPHONG) {
+	if (mat.model == ShadingModel::BLINNPHONG) 
+	{
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, mat.spec);
 		m_debugShader.setInt("material.texture_specular",TextureUnit::Specular);
 		m_debugShader.setFloat("material.shininess", mat.shininess);
-	} else if (mat.model == ShadingModel::PBR) {
-		glActiveTexture(GL_TEXTURE1);
+	}
+	else if (mat.model == ShadingModel::PBR)
+	{
+		glActiveTexture(GL_TEXTURE0 + TextureUnit::Metallic);
 		glBindTexture(GL_TEXTURE_2D, pick(mat.metallicMap));
 		m_debugShader.setInt("pbrMat.metallicMap",TextureUnit::Metallic);
-		glActiveTexture(GL_TEXTURE2);
+
+		glActiveTexture(GL_TEXTURE0 + TextureUnit::Roughness);
 		glBindTexture(GL_TEXTURE_2D, pick(mat.roughnessMap));
 		m_debugShader.setInt("pbrMat.roughnessMap", TextureUnit::Roughness);
-		glActiveTexture(GL_TEXTURE1);
+
+		glActiveTexture(GL_TEXTURE0 + TextureUnit::AO);
 		glBindTexture(GL_TEXTURE_2D, pick(mat.aoMap));
 		m_debugShader.setInt("pbrMat.aoMap", TextureUnit::AO);
+
+		m_debugShader.setFloat("pbrMat.metallicFactor", mat.metallic);
+		m_debugShader.setFloat("pbrMat.roughnessFactor", mat.roughness);
 	}
 }
 

@@ -66,7 +66,7 @@ private:
 	bool m_hdrEnabled = true;
 	float m_exposure = 1.0f;
 	int m_postFXMode = 0;
-	bool m_bloomEnabled = false;
+	bool m_bloomEnabled = true;
 	bool m_fxaaEnabled = true;
 
 	static constexpr int MAX_SPOT_LIGHTS = 4;
@@ -77,9 +77,9 @@ private:
 		Diffuse = 0,
 		Specular = 1,
 		Albedo = 0,
-		Metallic = 1,
-		Roughness = 2,
-		AO = 3,
+		Metallic = 14,
+		Roughness = 15,
+		AO = 16,
 		DirShadowMap = 4,
 		PointShadowMap = 5,
 		NormalMap = 7,
