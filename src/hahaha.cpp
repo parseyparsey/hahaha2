@@ -186,13 +186,13 @@ void confScene() {
 	placeholderMat.roughnessMap = rust_rough.ID;
 	placeholderMat.model = ShadingModel::PBR;
 	placeholderMat.metallic = 1.0;
-	placeholderMat.roughness = 0.8;
+	placeholderMat.roughness = 1.0;
 
 	Mesh &sphereMesh = scene.addMesh(sphere.vertices, sphere.indices);
 
 	Material &rust_mat = scene.addMaterial(placeholderMat);
 	GameObject &rust = scene.addObject("rust", &sphereMesh, &rust_mat);
-	rust.transform.position = glm::vec3(-1.0f, 1.0f, -6.0f);
+	rust.transform.position = glm::vec3(-1.0f, 1.0f, 26.0f);
 	rust.transform.scale = glm::vec3(0.6f, 0.6f, 0.6f);
 	placeholderMat.model = ShadingModel::BLINNPHONG;
 
