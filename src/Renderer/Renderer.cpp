@@ -198,6 +198,9 @@ void Renderer::bindMaterial(const Material &mat) {
 
 		m_debugShader.setFloat("pbrMat.metallicFactor", mat.metallic);
 		m_debugShader.setFloat("pbrMat.roughnessFactor", mat.roughness);
+
+		m_debugShader.setVec3("baseColor", mat.baseColor);
+		m_debugShader.setBool("packedMR", mat.packedMR);
 	}
 }
 
@@ -457,7 +460,7 @@ void Renderer::renderPointShadow(Scene &scene) {
 			proj * glm::lookAt(p, p + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
 			proj * glm::lookAt(p, p + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
 			proj * glm::lookAt(p, p + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))
-		};
+		}; 
 
 		for (int k = 0; k < 6; k++)
 			m_pointShadowDepthShader.setMat4(

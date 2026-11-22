@@ -159,15 +159,16 @@ void confScene() {
 	}
 
 	ModelData cyborgData;
-	ModelLoader::load("models/cyborg/cyborg.obj", cyborgData);
+	ModelLoader::load("models/abcde/scene.gltf", cyborgData);
 	auto cyborg = ModelLoader::instantiate(scene, cyborgData, textures,
-											 "cyborg", {true, true, true});
+											 "cyborg", {true, true, true, true});
 
 	for (size_t i : cyborg) {
 		auto &t = scene.getObjects()[i].transform;
 		t.position = glm::vec3(-3.0f, 3.0f, -6.0f);
 		t.scale = glm::vec3(0.6f, 0.6f, 0.6f);
-	}
+		//t.rotation = glm::vec3(-90.0f, 0.0f, 90.0f);
+	} 
 
 	Plane plane(150);
 	placeholderMat.diff = planetxt.ID;
@@ -276,11 +277,11 @@ void updateMyScene() {
 	sl.front().direction = scene.getCamera().Front;
 
 	if (flashlight_state == 1) {
-		sl.front().ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+		sl.front().ambient = glm::vec3(0.2f);
 		sl.front().diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 		sl.front().specular = glm::vec3(1.0f, 1.0f, 1.0f);
 	} else if (flashlight_state == 2) {
-		sl.front().ambient = glm::vec3(0.05f, 0.05f, 0.05f);
+		sl.front().ambient = glm::vec3(0.05f);
 		sl.front().diffuse = glm::vec3(0.4f, 0.4f, 0.4f);
 		sl.front().specular = glm::vec3(0.5f, 0.5f, 0.5f);
 	} else if (flashlight_state == 0) {

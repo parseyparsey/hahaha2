@@ -19,6 +19,57 @@ static std::string firstTexture(aiMaterial *m, aiTextureType t) {
 	return s.C_Str();
 }
 
+static void dumpMaterial(aiMaterial *m, int index) {
+	aiString name;
+	m->Get(AI_MATKEY_NAME, name);
+	std::cout << "[material " << index << "] " << name.C_Str() << "\n";
+	for (int t = aiTextureType_NONE + 1; t < AI_TEXTURE_TYPE_MAX; t++) {
+		if (!m->GetTextureCount((aiTextureType)t))
+			continue;
+		aiString p;
+		m->GetTexture((aiTextureType)t, 0, &p);
+		std::cout << "  " << aiTextureTypeToString((aiTextureType)t) << " -> "
+				  << p.C_Str() << "\n";
+	}
+}
+
+static void fillMaterial(aiMaterial* m, MaterialData& md) {
+	md.diffPath = firstTexture(m, aiTextureType_BASE_COLOR);
+	if (md.diffPath.empty())
+		md.diffPath = firstTexture(m, aiTextureType_DIFFUSE);
+	md.specPath = firstTexture(m, aiTextureType_SPECULAR);
+	md.normPath = firstTexture(m, aiTextureType_NORMALS);
+	if (md.normPath.empty())
+		md.normPath = firstTexture(m, aiTextureType_HEIGHT); // OBJ map_Bump
+	md.heightPath = firstTexture(m, aiTextureType_DISPLACEMENT);
+
+	md.metallicPath = firstTexture(m, aiTextureType_METALNESS);
+	md.roughnessPath = firstTexture(m, aiTextureType_DIFFUSE_ROUGHNESS);
+	md.aoPath = firstTexture(m, aiTextureType_AMBIENT_OCCLUSION);
+	if (md.aoPath.empty())
+		md.aoPath = firstTexture(m, aiTextureType_LIGHTMAP); // glTF occlusion
+	
+	aiColor4D c;
+	if (m->Get(AI_MATKEY_BASE_COLOR, c) == AI_SUCCESS)
+		md.baseColor = {c.r, c.g, c.b};
+	bool hasM = m->Get(AI_MATKEY_METALLIC_FACTOR, md.metallic) == AI_SUCCESS;
+	bool hasR = m->Get(AI_MATKEY_ROUGHNESS_FACTOR, md.roughness) == AI_SUCCESS;
+
+	// glTF's packed metallic-roughness texture: Assimp 5.x usually reports it
+	// as UNKNOWN
+	if (md.metallicPath.empty() && md.roughnessPath.empty() && (hasM || hasR)) {
+		md.metalRoughPath = firstTexture(m, aiTextureType_UNKNOWN);
+		md.packedMR = !md.metalRoughPath.empty();
+	}
+
+	md.isPBR = hasM || hasR || md.packedMR || !md.metallicPath.empty() ||
+			   !md.roughnessPath.empty() || !md.aoPath.empty();
+
+	float shin;
+	if (m->Get(AI_MATKEY_SHININESS, shin) == AI_SUCCESS && shin > 1.0f)
+		md.shininess = shin;
+}
+
 bool ModelLoader::import(const std::string &path, ModelData &out) {
 	Assimp::Importer importer;
 
@@ -34,15 +85,7 @@ bool ModelLoader::import(const std::string &path, ModelData &out) {
 	for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
 		aiMaterial *m = scene->mMaterials[i];
 		MaterialData md;
-		md.diffPath = firstTexture(m, aiTextureType_DIFFUSE);
-		md.specPath = firstTexture(m, aiTextureType_SPECULAR);
-		md.normPath = firstTexture(m, aiTextureType_NORMALS);
-		md.heightPath = firstTexture(m, aiTextureType_DISPLACEMENT);
-		if (md.normPath.empty())
-			md.normPath = firstTexture(m, aiTextureType_HEIGHT);
-		float shin;
-		if (m->Get(AI_MATKEY_SHININESS, shin) == AI_SUCCESS && shin > 1.0f)
-			md.shininess = shin;
+		fillMaterial(m, md);
 		out.materials.push_back(md);
 	}
 
@@ -93,10 +136,36 @@ std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data
 			m.spec = textures.get(data.directory + "/" + md.specPath, false, flips.specular);
 		if (!md.normPath.empty())
 			m.norm = textures.get(data.directory + "/" + md.normPath, false, flips.normal);
-		if (!md.heightPath.empty())
+		
+		if (md.isPBR)
+		{
+			m.model = ShadingModel::PBR;
+			if (md.packedMR) {
+				m.metallicMap = m.roughnessMap =
+					textures.get(data.directory + "/" + md.metalRoughPath, false, flips.pbr);
+				m.packedMR = true;
+			} else {
+				if (!md.metallicPath.empty())
+					m.metallicMap = textures.get(data.directory + "/" + md.metallicPath,
+										  false, flips.pbr);
+				if (!md.roughnessPath.empty())
+					m.roughnessMap = textures.get(data.directory + "/" + md.roughnessPath,
+									 false, flips.pbr);
+			}
+			if (!md.aoPath.empty())
+				m.aoMap = textures.get(data.directory + "/" + md.aoPath, 
+					false, flips.pbr);
+			m.metallic = md.metallic;
+			m.roughness = md.roughness;
+		} 
+		else
+		{
+			m.model = ShadingModel::BLINNPHONG;
+			if (!md.heightPath.empty())
 			m.parallaxMap = textures.get(data.directory + "/" + md.heightPath, false, flips.height);
-		m.shininess = md.shininess;
-		m.model = ShadingModel::BLINNPHONG;
+			m.shininess = md.shininess;
+		} 
+
 		mats.push_back(&scene.addMaterial(m));
 	}
 
@@ -118,6 +187,14 @@ std::vector<size_t> ModelLoader::instantiate(Scene& scene, const ModelData& data
 //  per material: 3 strings (u32 length + bytes), float shininess
 //  per mesh: u32 materialIndex | u32 vertexCount | u32 indexCount | Vertex[] | Index[]
 
+using PathMember = std::string MaterialData::*;
+
+static constexpr PathMember kPaths[] = {
+	&MaterialData::diffPath,   &MaterialData::specPath,     &MaterialData::normPath,
+    &MaterialData::heightPath, &MaterialData::metallicPath, &MaterialData::roughnessPath,
+    &MaterialData::aoPath,     &MaterialData::metalRoughPath
+};
+
 static void writeStr(std::ostream& out, const std::string& s) { 
 	uint32_t n = (uint32_t)s.size();
 	out.write((char *)&n, 4);
@@ -130,6 +207,40 @@ static bool readStr(std::istream &in, std::string &s) {
 		return false;
 	s.resize(n);
 	return (bool)in.read(s.data(), n);
+}
+
+static void writeMaterial(std::ostream &o, const MaterialData &m) {
+	for (PathMember p : kPaths)
+		writeStr(o, m.*p);
+
+	float f[6] = {m.baseColor.r, m.baseColor.g, m.baseColor.b,
+				  m.shininess,	 m.metallic,	m.roughness};
+
+	uint32_t flags = (m.isPBR ? 1u : 0u) | (m.packedMR ? 2u : 0u);
+
+	o.write((const char *)f, sizeof(f));
+	o.write((const char *)&flags, sizeof(4));
+}
+
+static bool readMaterial(std::ifstream& in, MaterialData& m) {
+	for (PathMember p : kPaths)
+		if (!readStr(in, m.*p))
+			return false;
+
+	float f[6];
+	uint32_t flags;
+
+	if (!in.read((char *)f, sizeof(f)) || !in.read((char *)&flags, 4))
+		return false;
+
+	m.baseColor = {f[0], f[1], f[2]};
+	m.shininess = f[3];
+	m.metallic = f[4];
+	m.roughness = f[5];
+	m.isPBR = (flags & 1u) != 0;
+	m.packedMR = (flags & 2u) != 0;
+
+	return true;
 }
 
 static_assert(std::is_trivially_copyable_v<Vertex>);
@@ -146,11 +257,7 @@ bool ModelLoader::writeBinary(const std::string& file, ModelData& data) {
 
 	for (auto& m : data.materials)
 	{
-		writeStr(o, m.diffPath);
-		writeStr(o, m.specPath);
-		writeStr(o, m.normPath);
-		writeStr(o, m.heightPath);
-		o.write((char *)&m.shininess, 4);
+		writeMaterial(o, m);
 	}
 
 	for (auto &s : data.meshes)
@@ -183,10 +290,7 @@ bool ModelLoader::readBinary(const std::string& file, ModelData& out) {
 	out.materials.resize(hdr[2]);
 	
 	for (auto &m : out.materials) {
-		if (!readStr(in, m.diffPath) || !readStr(in, m.specPath) ||
-			!readStr(in, m.normPath) || !readStr(in, m.heightPath))
-			return false;
-		if (!in.read((char *)&m.shininess, 4))
+		if (!readMaterial(in, m))
 			return false;
 	}
 

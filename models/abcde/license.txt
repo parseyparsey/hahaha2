@@ -1,0 +1,11 @@
+Model Information:
+* title:	Anime Swordswoman - Image to 3D - SupaVoxel
+* source:	https://sketchfab.com/3d-models/anime-swordswoman-image-to-3d-supavoxel-3f6e6154eaaa4e2d9693c621c8889bb0
+* author:	Xavi Vidal (https://sketchfab.com/xvidal3)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Anime Swordswoman - Image to 3D - SupaVoxel" (https://sketchfab.com/3d-models/anime-swordswoman-image-to-3d-supavoxel-3f6e6154eaaa4e2d9693c621c8889bb0) by Xavi Vidal (https://sketchfab.com/xvidal3) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

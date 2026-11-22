@@ -28,6 +28,7 @@ find_package(OpenAL REQUIRED)
 find_package(assimp REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 
 # Link libraries
 target_link_libraries(hahaha2 PRIVATE
@@ -36,6 +37,7 @@ target_link_libraries(hahaha2 PRIVATE
     assimp::assimp
     OpenGL::GL
     glm::glm
+    EnTT::EnTT
 )
 
 # Copy assets to build output directory

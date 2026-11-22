@@ -2,11 +2,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <entt/entt.hpp>
 #include "GameObject.h"
 #include "Mesh.h"
 #include "Camera.h"
 #include <vector>
 #include <memory>
+#include "Components.h"
 
 struct PointLight {
 	glm::vec3 position;
@@ -47,6 +49,13 @@ public:
 	Camera &getCamera() { return m_camera; }
 	Skybox &getSkybox() { return m_skybox; }
 
+	entt::registry &registry() { return m_registry; }
+	entt::entity createEntity(const std::string& name, entt::entity parent);
+
+	void setParent(entt::entity child, entt::entity newParent);
+	void setRenderable(entt::entity e, Mesh *mesh, Material *material);
+	void updateTransforms();
+
 private:
 	std::vector<GameObject> m_objects;
 	std::vector<PointLight> m_pointLights;
@@ -57,6 +66,8 @@ private:
 	std::vector<std::unique_ptr<Mesh>> m_meshes;
 
 	Skybox m_skybox;
-
 	Camera m_camera;
+
+	entt::registry m_registry;
+	void updateWorld(entt::entity e, const glm::mat4 &parentWorld);
 };

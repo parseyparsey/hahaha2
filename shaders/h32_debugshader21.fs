@@ -108,6 +108,9 @@ uniform bool parallaxClip;
 
 uniform int shadingModel;
 
+uniform bool packedMR;
+uniform vec3 baseColor;
+
 float calcDirShadow(vec4 fragPosLightSpace, dirLight light);
 float calcSpotShadow(int i, vec3 fragPos, vec3 normal,vec3 lightDir);
 float CalcPointShadow(int i, vec3 fragPos, vec3 lightPos, vec3 normal);
@@ -149,8 +152,14 @@ void main() {
         s.shininess = material.shininess;
     }
     else if (shadingModel == PBR) {
-        s.metallic = texture(pbrMat.metallicMap, uv).r * pbrMat.metallicFactor;
-        s.roughness = clamp(texture(pbrMat.roughnessMap, uv).r * pbrMat.roughnessFactor, 0.04, 1.0);
+        if (packedMR) {
+            vec3 mr = texture(pbrMat.roughnessMap, uv).rgb;
+            s.metallic  = mr.b * pbrMat.metallicFactor;
+            s.roughness = clamp(mr.g * pbrMat.roughnessFactor, 0.04, 1.0);
+        } else{
+            s.metallic = texture(pbrMat.metallicMap, uv).r * pbrMat.metallicFactor;
+            s.roughness = clamp(texture(pbrMat.roughnessMap, uv).r * pbrMat.roughnessFactor, 0.04, 1.0);
+        }
         s.ao = texture(pbrMat.aoMap, uv).r;
     }
     FragColor = vec4(shade(s, viewDir), 1.0);
@@ -218,7 +227,7 @@ vec3 shade(Surface s, vec3 V) {
         float att = 1.0 / (l.constant + l.linear * d + l.quadratic * d * d);
         float theta = dot(-L, normalize(l.direction));
         float cone = clamp((theta - l.outercutoff) / (l.cutoff - l.outercutoff), 0.0, 1.0);
-        float sh = (i < sl_num) ? calcSpotShadow(i, s.pos, s.Ng, L) : 0.0;
+        float sh = calcSpotShadow(i, s.pos, s.Ng, L);
         Lo += evalBRDF(s, L, V, l.diffuse * att * cone * (1.0 - sh));
         ambient += l.ambient * att * cone;
     }
@@ -264,7 +273,7 @@ float calcSpotShadow(int i, vec3 fragPos, vec3 normal,vec3 lightDir){
     if (proj.z > 1.0 || proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0)
         return 0.0; // outside the shadow frustum: treat as lit
 
-    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0005);
+    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0002);
     vec2 texel = 1.0 / textureSize(spotShadowMap[i], 0);
     float shadow = 0.0;
     for (int x = -1; x <= 1; ++x)
@@ -272,6 +281,7 @@ float calcSpotShadow(int i, vec3 fragPos, vec3 normal,vec3 lightDir){
             float d = texture(spotShadowMap[i], proj.xy + vec2(x, y) * texel).r;
             shadow += (proj.z - bias > d) ? 1.0 : 0.0;
         }
+
     return shadow / 9.0;
 }
 
@@ -321,11 +331,19 @@ vec2 ParallaxMapping(vec2 uv, vec3 v){
     vec2 cur = uv;
     float curDepth = 0.0;
     float h = textureLod(parallaxDepthMap, cur, 0.0).r;
-    for (int i = 0; i < 64 && curDepth < h; i++) {
+
+    //for (int i = 0; i < 64 && curDepth < h; i++) {
+    for (int i = 0; i < int(numLayers); i++) {
+        if (curDepth >= h)
+        {
+            break; 
+        }
+
         cur -= delta;
         h = textureLod(parallaxDepthMap, cur, 0.0).r;
         curDepth += layerDepth;
     }
+
     vec2 prev = cur + delta;
     float after  = h - curDepth;
     float before = textureLod(parallaxDepthMap, prev, 0.0).r - curDepth + layerDepth;

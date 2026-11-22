@@ -33,4 +33,6 @@ private:
 
 	unsigned m_vao = 0, m_vbo = 0, m_ebo = 0;
 	int m_vertexCount = 0, m_indexCount = 0;
+
+	glm::vec3 boundsMin{0.0f}, boundsMax{0.0f};
 };

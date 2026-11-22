@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include "Mesh.h"
+#include "Components.h"
 
 enum ShadingModel {
 	BLINNPHONG = 0, 
@@ -30,13 +31,16 @@ struct Material {
 	//PBR
 	unsigned int metallicMap = 0, aoMap = 0, emissiveMap = 0, roughnessMap = 0;
 	float metallic = 1.0f, roughness = 1.0f;
-};
 
+	bool packedMR = false;
+	glm::vec3 baseColor{1.0f};
+};
+/*
 struct Transform {
 	glm::vec3 position{0.0f};
 	glm::vec3 rotation{0.0f};
 	glm::vec3 scale{1.0f};
-};
+};*/
 
 class GameObject {
 public:

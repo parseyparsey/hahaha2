@@ -24,6 +24,14 @@ Mesh &Mesh::operator=(Mesh &&other) noexcept {
 
 void Mesh::setup(const std::vector<Vertex> &vertices,
 				 const std::vector<unsigned int> indices) {
+	if (!vertices.empty()) {
+		boundsMin = boundsMax = vertices[0].position;
+		for (const Vertex &v : vertices) {
+			boundsMin = glm::min(boundsMin, v.position);
+			boundsMax = glm::max(boundsMax, v.position);
+		}
+	}
+
 	m_vertexCount = (int)vertices.size();
 	m_indexCount = (int)indices.size();
 
