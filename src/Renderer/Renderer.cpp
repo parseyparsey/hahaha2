@@ -13,6 +13,8 @@ Renderer::Renderer(int width, int height) :
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}}),
 		Framebuffer(width, height, {{GL_RGBA16F, GL_RGBA, GL_FLOAT}})},
 	m_ldrFBO(width, height, {{GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE}}),
+	m_dirLightSpaceMatricesUBO(sizeof(glm::mat4) * 16, 0,
+										 GL_STATIC_DRAW),
 	m_lightShader("shaders/lightobj.vs", "shaders/lightobj.fs"),
 	m_brightPassShader("shaders/h32_framebuffer.vs", "shaders/h32_bloomBrightPass.fs"),
 	m_blurShader("shaders/h32_framebuffer.vs", "shaders/h32_bloomBlur.fs"),
@@ -27,7 +29,9 @@ Renderer::Renderer(int width, int height) :
 {
 	initQuad();
 	h32rf::whiteTxt(m_whiteTex);
-	
+
+	m_shadowCascadeLevels = h32rf::calculateCascadeSplits(0.1f, 250.0f, 4, 0.5f);
+
 	for (int i = 0; i < MAX_SPOT_LIGHTS; i++)
 		m_spotShadowDepthFBO.emplace_back(m_spotShadowMapSize, m_spotShadowMapSize,
 									 std::vector<AttachmentSpec>{},

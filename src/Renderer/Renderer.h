@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "Framebuffer.h"
+#include "UniformBuffer.h"
 #include "shader.h"
 #include "Scene/Scene.h"
 #include "h32r_func.h"
@@ -47,6 +48,9 @@ private:
 
 	std::vector<Framebuffer> m_spotShadowDepthFBO;
 	std::vector<glm::mat4> m_spotLightSpaceMatrices;
+
+	UniformBuffer m_dirLightSpaceMatricesUBO;
+	std::vector<float> m_shadowCascadeLevels;
 
 	Shader m_lightShader;
 	Shader m_brightPassShader;

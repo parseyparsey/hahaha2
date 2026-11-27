@@ -210,6 +210,125 @@ namespace h32rf {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
-}
 
+	inline std::vector<glm::vec4> getFrustumCornersWSpace(const glm::mat4& projview)
+	{
+		const glm::mat4 inv = glm::inverse(projview);
+		std::vector<glm::vec4> fCorners;
+
+		for (unsigned int x = 0; x < 2; ++x) {
+			for (unsigned int y = 0; y < 2; ++y) {
+				for (unsigned int z = 0; z < 2; ++z) {
+					const glm::vec4 pt =
+						inv * glm::vec4(
+							2.0f * x - 1.0f, 
+							2.0f * y - 1.0f,
+							2.0f * z - 1.0f, 
+							1.0f
+						);
+					fCorners.push_back(pt / pt.w);
+				}
+			}
+		}
+		return fCorners;
+	}
+
+	inline glm::mat4 getDirLightSpaceMatrix(float &nearP, float &farP,
+		const glm::mat4& view, float& wh,
+		std::vector<glm::vec4>& fCorners,
+		float& fov, glm::vec3& lightDir)
+	{
+		glm::mat4 proj = glm::perspective(glm::radians(fov), wh, nearP, farP);
+		const std::vector<glm::vec4> corners =
+			h32rf::getFrustumCornersWSpace(proj * view);
+
+		glm::vec3 center = glm::vec3(0.0f);
+
+		for (const glm::vec4 &v : fCorners)
+			center += glm::vec3(v);
+
+		center /= fCorners.size();
+
+		const glm::mat4 lightView =
+			glm::lookAt(center + lightDir, center, glm::vec3(0.0f, 1.0f, 0.0f));
+
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::lowest();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::lowest();
+		float minZ = std::numeric_limits<float>::max();
+		float maxZ = std::numeric_limits<float>::lowest();
+
+		for (const auto &v : fCorners) {
+			const auto trf = lightView * v;
+			minX = std::min(minX, trf.x);
+			maxX = std::max(maxX, trf.x);
+			minY = std::min(minY, trf.y);
+			maxY = std::max(maxY, trf.y);
+			minZ = std::min(minZ, trf.z);
+			maxZ = std::max(maxZ, trf.z);
+		}
+
+		constexpr float zMult = 10.0f;
+		if (minZ < 0) {
+			minZ *= zMult;
+		} else {
+			minZ /= zMult;
+		}
+		if (maxZ < 0) {
+			maxZ /= zMult;
+		} else {
+			maxZ *= zMult;
+		}
+
+		const glm::mat4 lightProjection =
+			glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+		return lightProjection * lightView;
+	}
+
+	inline std::vector<glm::mat4>getLightSpaceMatrices(
+						  float &nearP, float &farP, std::vector<float> &shadowCascadeLevels,
+						  const glm::mat4 &view, float &wh,
+						  std::vector<glm::vec4> &fCorners, float &fov,
+						  glm::vec3 &lightDir) 
+	{
+		std::vector<glm::mat4> ret;
+		for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i) {
+			if (i == 0) {
+				ret.push_back(getDirLightSpaceMatrix(nearP, shadowCascadeLevels[i], 
+					view, wh, fCorners, fov, lightDir));
+			} else if (i < shadowCascadeLevels.size()) {
+				ret.push_back(getDirLightSpaceMatrix(shadowCascadeLevels[i - 1], 
+					shadowCascadeLevels[i], view, wh, fCorners, fov, lightDir));
+			} else {
+				ret.push_back(getDirLightSpaceMatrix(shadowCascadeLevels[i - 1],
+					farP, view, wh, fCorners, fov, lightDir));
+			}
+		}
+		return ret;
+	}
+
+	inline std::vector<float> calculateCascadeSplits(float nearPlane, float farPlane,
+											  int cascadeCount, float lambda) {
+		std::vector<float> splits;
+
+		for (int i = 1; i <= cascadeCount; ++i) {
+			float p = static_cast<float>(i) / cascadeCount;
+
+			// Uniform split
+			float uniform = nearPlane + (farPlane - nearPlane) * p;
+
+			// Logarithmic split
+			float logarithmic = nearPlane * std::pow(farPlane / nearPlane, p);
+
+			// Blend both approaches
+			float split = lambda * logarithmic + (1.0f - lambda) * uniform;
+
+			splits.push_back(split);
+		}
+
+		return splits;
+	}
+	
+}
 #endif
